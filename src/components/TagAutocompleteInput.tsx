@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, ChangeEvent } from 'react';
 import { TAG_API } from '../utils/api';
 import { TagInfo } from '../types';
+import { splitTags } from '../utils/tags';
 
 interface TagAutocompleteInputProps {
     value: string;
@@ -45,7 +46,7 @@ export default function TagAutocompleteInput({ value, onChange }: TagAutocomplet
     }, [allTags, value]);
 
     const handleSelect = useCallback((tagName: string) => {
-        const parts = value.split(',').map(t => t.trim()).filter(Boolean);
+        const parts = splitTags(value);
         parts.pop();
         parts.push(tagName);
         onChange(parts.join(', ') + ', ');
@@ -123,10 +124,9 @@ export default function TagAutocompleteInput({ value, onChange }: TagAutocomplet
             </div>
             {value && (
                 <div className="tags-preview">
-                    {value.split(',').map((tag: string, i: number) => {
-                        const trimmed = tag.trim();
-                        return trimmed ? <span key={i} className="tag-chip">{trimmed}</span> : null;
-                    })}
+                    {splitTags(value).map((tag: string, i: number) => (
+                        <span key={i} className="tag-chip">{tag}</span>
+                    ))}
                 </div>
             )}
         </div>

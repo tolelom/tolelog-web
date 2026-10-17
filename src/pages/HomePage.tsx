@@ -8,6 +8,8 @@ import { cachedFetch } from '../utils/apiCache';
 import { PostListItem, Series, User, TagInfo } from '../types';
 import PageMeta from '../components/PageMeta';
 import Pager from '../components/Pager';
+import TagChip from '../components/TagChip';
+import { splitTags } from '../utils/tags';
 import { parsePostListPage } from '../utils/postList';
 import { BlogJsonLd } from '../components/StructuredData';
 import { postPath } from '../utils/slug';
@@ -314,19 +316,14 @@ export default function HomePage() {
                         )}
                         {post.tags && (
                             <div className="home-post-tags">
-                                {post.tags.split(',').map((t: string) => {
-                                    const trimmed = t.trim();
-                                    return trimmed ? (
-                                        <button
-                                            key={trimmed}
-                                            type="button"
-                                            className={`tag-chip tag-chip-btn${tag === trimmed ? ' tag-chip-active' : ''}`}
-                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSearchParams(tag === trimmed ? {} : { tag: trimmed }); }}
-                                        >
-                                            {trimmed}
-                                        </button>
-                                    ) : null;
-                                })}
+                                {splitTags(post.tags).map((t: string) => (
+                                    <TagChip
+                                        key={t}
+                                        tag={t}
+                                        active={tag === t}
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSearchParams(tag === t ? {} : { tag: t }); }}
+                                    />
+                                ))}
                             </div>
                         )}
                         {post.excerpt && (

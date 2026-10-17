@@ -3,6 +3,8 @@ import { PostListItem } from '../../types';
 import { formatDate } from '../../utils/format';
 import { postPath } from '../../utils/slug';
 import Pager from '../Pager';
+import TagChip from '../TagChip';
+import { splitTags } from '../../utils/tags';
 
 interface ProfilePostListProps {
     posts: PostListItem[];
@@ -72,19 +74,14 @@ export default function ProfilePostList({
                         {post.view_count > 0 && (
                             <span className="profile-post-views">조회 {post.view_count}</span>
                         )}
-                        {post.tags && post.tags.split(',').map((t: string) => {
-                            const trimmed = t.trim();
-                            return trimmed ? (
-                                <button
-                                    key={trimmed}
-                                    type="button"
-                                    className={`tag-chip tag-chip-btn${tag === trimmed ? ' tag-chip-active' : ''}`}
-                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onTagClick(trimmed); }}
-                                >
-                                    {trimmed}
-                                </button>
-                            ) : null;
-                        })}
+                        {post.tags && splitTags(post.tags).map((t: string) => (
+                            <TagChip
+                                key={t}
+                                tag={t}
+                                active={tag === t}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onTagClick(t); }}
+                            />
+                        ))}
                         {!post.is_public && (
                             <span className="profile-post-private">비공개</span>
                         )}

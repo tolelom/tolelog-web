@@ -16,7 +16,9 @@ import { useKatexReady } from '../hooks/useKatexReady';
 import { useToast } from '../hooks/useToast';
 import CommentSection from '../components/CommentSection';
 import PageMeta from '../components/PageMeta';
+import TagChip from '../components/TagChip';
 import { ArticleJsonLd, BreadcrumbJsonLd } from '../components/StructuredData';
+import { splitTags } from '../utils/tags';
 import 'highlight.js/styles/atom-one-dark.css';
 import './PostDetailPage.css';
 
@@ -185,7 +187,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
                             publishedTime: prerenderedMeta.created_at,
                             modifiedTime: prerenderedMeta.updated_at,
                             author: prerenderedMeta.author,
-                            tags: prerenderedMeta.tags ? prerenderedMeta.tags.split(',').map(t => t.trim()).filter(Boolean) : undefined,
+                            tags: prerenderedMeta.tags ? splitTags(prerenderedMeta.tags) : undefined,
                         }}
                     />
                 )}
@@ -226,7 +228,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
 
     const metaDescription = getPlainText(post.content);
     const ogImage = getFirstHttpImage(post.content) ?? undefined;
-    const tagList = post.tags ? post.tags.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const tagList = post.tags ? splitTags(post.tags) : [];
     const postCanonical = postPath({ id: post.id, title: post.title });
 
     return (
@@ -297,14 +299,9 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
 
                 {post.tags && (
                     <div className="post-tags">
-                        {post.tags.split(',').map((tag: string) => {
-                            const trimmed = tag.trim();
-                            return trimmed ? (
-                                <button key={trimmed} type="button" className="tag-chip tag-chip-btn"
-                                    onClick={() => navigate(`/?tag=${encodeURIComponent(trimmed)}`)}
-                                >{trimmed}</button>
-                            ) : null;
-                        })}
+                        {tagList.map((t: string) => (
+                            <TagChip key={t} tag={t} onClick={() => navigate(`/?tag=${encodeURIComponent(t)}`)} />
+                        ))}
                     </div>
                 )}
 

@@ -8,6 +8,7 @@ import PageMeta from '../components/PageMeta';
 import { notify as toast } from '../utils/notify';
 import { User, PostListItem, Series } from '../types';
 import { parsePostListPage } from '../utils/postList';
+import { splitTags } from '../utils/tags';
 import ProfileSeriesSection from '../components/profile/ProfileSeriesSection';
 import ProfilePostList from '../components/profile/ProfilePostList';
 import './UserProfilePage.css';
@@ -47,9 +48,8 @@ export default function UserProfilePage() {
         const counts: Record<string, number> = {};
         posts.forEach((post: PostListItem) => {
             if (post.tags) {
-                post.tags.split(',').forEach((t: string) => {
-                    const trimmed = t.trim();
-                    if (trimmed) counts[trimmed] = (counts[trimmed] || 0) + 1;
+                splitTags(post.tags).forEach((t: string) => {
+                    counts[t] = (counts[t] || 0) + 1;
                 });
             }
         });

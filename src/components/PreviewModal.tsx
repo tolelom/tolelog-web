@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { renderMarkdown } from '../utils/markdown';
 import { useCopyCodeBlock } from '../hooks/useCopyCodeBlock';
+import { splitTags } from '../utils/tags';
 
 interface PreviewModalProps {
     title: string;
@@ -41,10 +42,9 @@ export default function PreviewModal({ title, content, tags, onClose }: PreviewM
                 </div>
                 {tags && (
                     <div className="preview-tags">
-                        {tags.split(',').map((tag: string, i: number) => {
-                            const trimmed = tag.trim();
-                            return trimmed ? <span key={i} className="tag-chip">{trimmed}</span> : null;
-                        })}
+                        {splitTags(tags).map((tag: string, i: number) => (
+                            <span key={i} className="tag-chip">{tag}</span>
+                        ))}
                     </div>
                 )}
                 <div
