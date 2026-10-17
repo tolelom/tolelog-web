@@ -46,6 +46,9 @@ export default function EditorPage() {
     const [loadedSeriesId, setLoadedSeriesId] = useState<string>('');
     const [showPreview, setShowPreview] = useState<boolean>(false);
     const isEditMode = !!postId;
+    // 초안을 열었으면 저장이 곧 발행이 되지 않도록 임시저장과 발행을 나눈다.
+    const [loadedStatus, setLoadedStatus] = useState<string | undefined>(undefined);
+    const isEditingDraft = isEditMode && loadedStatus === 'draft';
 
     // 모달 닫을 때 트리거 버튼으로 포커스 복원 (a11y)
     useReturnFocus(showRestorePrompt);
@@ -133,6 +136,7 @@ export default function EditorPage() {
                         };
                         setFormData(loaded);
                         setBaseline(loaded);
+                        setLoadedStatus(post.status);
                         if (post.series) {
                             setSelectedSeriesId(String(post.series.series_id));
                             setLoadedSeriesId(String(post.series.series_id));
@@ -301,7 +305,7 @@ export default function EditorPage() {
             invalidateCache('posts:');
             invalidateCache('search:');
 
-            const successMsg = isEditMode ? '글이 수정되었습니다' : '글이 저장되었습니다';
+            const successMsg = isEditingDraft ? '글을 발행했습니다' : isEditMode ? '글이 수정되었습니다' : '글이 저장되었습니다';
             toast.success(successMsg);
             clearDraft();
 
@@ -322,6 +326,47 @@ export default function EditorPage() {
             const msg = err instanceof Error ? err.message : '글 저장에 실패했습니다';
             toast.error(msg);
             setError(msg); // 폼 영역에도 표시해 사용자가 입력값을 잃지 않게
+            setIsSaving(false);
+        }
+    };
+
+    // 초안 편집의 임시저장: status 는 draft 로 두고 페이지에 머문다.
+    const handleSaveDraft = async () => {
+        if (!postId) return;
+        if (!formData.content.trim()) {
+            setError('내용을 입력해주세요');
+            return;
+        }
+        if (!token) {
+            setError('로그인이 필요합니다');
+            navigate('/login');
+            return;
+        }
+
+        setIsSaving(true);
+        setError('');
+        try {
+            await POST_API.saveDraft(
+                postId,
+                formData.title.trim() || '제목 없음',
+                formData.content,
+                formData.tags || '',
+                token,
+                formData.is_public,
+            );
+            setBaseline(formData);
+            clearDraft();
+            toast.success('임시저장했습니다');
+        } catch (err: unknown) {
+            const apiErr = err as { status?: number };
+            if (apiErr.status === 401) {
+                navigate('/login');
+                return;
+            }
+            const msg = err instanceof Error ? err.message : '임시저장에 실패했습니다';
+            toast.error(msg);
+            setError(msg);
+        } finally {
             setIsSaving(false);
         }
     };
@@ -459,14 +504,35 @@ export default function EditorPage() {
                         >
                             취소
                         </button>
-                        <button
-                            type="button"
-                            className="save-button"
-                            onClick={handleSave}
-                            disabled={isSaving}
-                        >
-                            {isSaving ? (isEditMode ? '수정 중...' : '저장 중...') : (isEditMode ? '수정 완료' : '글 발행')}
-                        </button>
+                        {isEditingDraft ? (
+                            <>
+                                <button
+                                    type="button"
+                                    className="cancel-button"
+                                    onClick={handleSaveDraft}
+                                    disabled={isSaving}
+                                >
+                                    임시저장
+                                </button>
+                                <button
+                                    type="button"
+                                    className="save-button"
+                                    onClick={handleSave}
+                                    disabled={isSaving}
+                                >
+                                    발행
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                type="button"
+                                className="save-button"
+                                onClick={handleSave}
+                                disabled={isSaving}
+                            >
+                                {isSaving ? (isEditMode ? '수정 중...' : '저장 중...') : (isEditMode ? '수정 완료' : '글 발행')}
+                            </button>
+                        )}
                     </div>
                 </div>
             </form>

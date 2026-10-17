@@ -48,7 +48,7 @@ export const POST_API = {
         return request('/api/v1/posts', { method: 'POST', auth: 'required', token, json: { title, content, is_public: isPublic, tags } });
     },
 
-    // 편집기의 저장은 곧 발행이므로 draft 를 열어 저장해도 published 가 된다
+    // 발행과 발행된 글의 수정 저장은 published 를 보낸다. 초안을 draft 로 남기려면 saveDraft 를 쓴다.
     updatePost: async (postId: number | string, title: string, content: string, isPublic: boolean = true, token: string, tags: string = ''): Promise<SuccessResponse<{ id: number }>> => {
         return request(`/api/v1/posts/${postId}`, {
             method: 'PUT', auth: 'required', token, json: { title, content, is_public: isPublic, tags, status: 'published' },
@@ -69,7 +69,11 @@ export const POST_API = {
         });
     },
 
-    saveDraft: async (postId: number | string, title: string, content: string, tags: string, token: string): Promise<SuccessResponse<{ id: number }>> => {
-        return request(`/api/v1/posts/${postId}`, { method: 'PUT', auth: 'required', token, json: { title, content, tags, status: 'draft' } });
+    // isPublic 을 빼면 백엔드는 저장된 공개 설정을 그대로 둔다(PUT 은 보낸 필드만 바꾼다).
+    saveDraft: async (postId: number | string, title: string, content: string, tags: string, token: string, isPublic?: boolean): Promise<SuccessResponse<{ id: number }>> => {
+        const json = isPublic === undefined
+            ? { title, content, tags, status: 'draft' }
+            : { title, content, tags, is_public: isPublic, status: 'draft' };
+        return request(`/api/v1/posts/${postId}`, { method: 'PUT', auth: 'required', token, json });
     },
 };
