@@ -157,4 +157,29 @@ describe('UserProfilePage', () => {
         expect(await screen.findByText('오류가 발생했습니다: 사용자 프로필을 불러오지 못했습니다 (404)')).toBeInTheDocument();
         expect(screen.getByRole('link', { name: '홈으로 돌아가기' })).toHaveAttribute('href', '/');
     });
+
+    it('글 카드의 태그를 누르면 그 태그로 다시 불러온다', async () => {
+        mockGetUserPosts.mockResolvedValue(postsResponse([item({ tags: 'gc' })]));
+        renderProfile();
+        // 태그 클라우드의 'gc 1' 이 아니라 글 카드의 'gc' 칩
+        fireEvent.click(await screen.findByRole('button', { name: 'gc' }));
+
+        await waitFor(() => expect(mockGetUserPosts).toHaveBeenLastCalledWith('1', 1, 10, expect.objectContaining({ tag: 'gc' })));
+    });
+
+    it('다음 페이지와 이전 페이지로 오간다', async () => {
+        mockGetUserPosts.mockImplementation(async (_userId, page = 1) =>
+            postsResponse([item({ id: page, title: `${page}쪽 글` })], 2, 2));
+        renderProfile();
+        expect(await screen.findByText('1 / 2')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '← 이전' })).toBeDisabled();
+
+        fireEvent.click(screen.getByRole('button', { name: '다음 →' }));
+        expect(await screen.findByText('2 / 2')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '다음 →' })).toBeDisabled();
+
+        fireEvent.click(screen.getByRole('button', { name: '← 이전' }));
+        expect(await screen.findByText('1 / 2')).toBeInTheDocument();
+        expect(mockGetUserPosts).toHaveBeenLastCalledWith('1', 1, 10, expect.anything());
+    });
 });

@@ -190,4 +190,30 @@ describe('HomePage', () => {
 
         await waitFor(() => expect(screen.queryByRole('heading', { name: '첫 글' })).not.toBeInTheDocument());
     });
+
+    it('글 카드의 태그를 누르면 그 태그로 다시 불러오고, 다시 누르면 필터를 푼다', async () => {
+        mockGetPublicPosts.mockResolvedValue(listResponse([item({ tags: 'gc, c' })]));
+
+        renderWithProviders(<HomePage />);
+        fireEvent.click(await screen.findByRole('button', { name: 'gc' }));
+        await waitFor(() => expect(mockGetPublicPosts).toHaveBeenLastCalledWith(1, 10, expect.objectContaining({ tag: 'gc' })));
+        expect(await screen.findByText('태그:')).toBeInTheDocument();
+
+        // 필터 없는 첫 페이지는 캐시에 있어 다시 요청하지 않는다. 화면에서 필터가 풀렸는지 본다.
+        fireEvent.click(await screen.findByRole('button', { name: 'gc' }));
+        await waitFor(() => expect(screen.queryByText('태그:')).not.toBeInTheDocument());
+    });
+
+    it('이전 페이지로 돌아가면 첫 페이지를 다시 불러온다', async () => {
+        mockGetPublicPosts.mockImplementation(async (page = 1) =>
+            listResponse([item({ id: page, title: `${page}쪽 글` })], page, 2));
+
+        renderWithProviders(<HomePage />, { route: '/?page=2' });
+        expect(await screen.findByRole('heading', { name: '2쪽 글' })).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: '← 이전' }));
+
+        expect(await screen.findByRole('heading', { name: '1쪽 글' })).toBeInTheDocument();
+        expect(screen.getByText('1 / 2')).toBeInTheDocument();
+    });
 });

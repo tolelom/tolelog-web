@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import PostDetailPage from '../PostDetailPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { makePost } from '../../test-utils/fixtures';
@@ -109,5 +110,24 @@ describe('PostDetailPage', () => {
             authValue: { token: 'T', userId: 42 },
         });
         expect(await screen.findByRole('button', { name: /삭제/ })).toBeInTheDocument();
+    });
+
+    it('태그를 누르면 그 태그로 거른 홈 목록으로 간다', async () => {
+        mockGetPost.mockResolvedValueOnce({
+            status: 'success',
+            data: makePost({ title: '태그 글', tags: 'gc, 기초' }),
+        });
+        function HomeProbe() {
+            return <p>홈 {useLocation().search}</p>;
+        }
+        renderWithProviders(
+            <Routes>
+                <Route path="/post/:postId" element={<PostDetailPage />} />
+                <Route path="/" element={<HomeProbe />} />
+            </Routes>,
+            { route: '/post/1' },
+        );
+        fireEvent.click(await screen.findByRole('button', { name: '기초' }));
+        expect(await screen.findByText(`홈 ?tag=${encodeURIComponent('기초')}`)).toBeInTheDocument();
     });
 });
