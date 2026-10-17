@@ -6,7 +6,8 @@ import { validateImageFile, compressImage } from '../utils/imageUpload';
 import { resolveAssetUrl } from '../utils/assetUrl';
 import PageMeta from '../components/PageMeta';
 import { notify as toast } from '../utils/notify';
-import { User, PostListItem, Pagination, PostListWithPagination, Series } from '../types';
+import { User, PostListItem, Series } from '../types';
+import { parsePostListPage } from '../utils/postList';
 import ProfileSeriesSection from '../components/profile/ProfileSeriesSection';
 import ProfilePostList from '../components/profile/ProfilePostList';
 import './UserProfilePage.css';
@@ -133,18 +134,15 @@ export default function UserProfilePage() {
                     setSeriesList(seriesRes.data || []);
                 }
 
-                const data = postsRes.data;
-                const list: PostListItem[] = Array.isArray(data) ? data : data.posts || [];
-                const pagination: Pagination | undefined = (data as PostListWithPagination).pagination;
+                const { posts: list, pagination, hasMore: more } = parsePostListPage(postsRes.data, page, PAGE_SIZE);
                 setPosts(list);
                 if (pagination) {
                     setTotalPosts(pagination.total || list.length);
                     setTotalPages(pagination.total_pages || 0);
-                    setHasMore(page < pagination.total_pages);
                 } else {
                     setTotalPosts(list.length);
-                    setHasMore(list.length === PAGE_SIZE);
                 }
+                setHasMore(more);
             })
             .catch((err: Error) => {
                 if (err.name === 'AbortError') return;

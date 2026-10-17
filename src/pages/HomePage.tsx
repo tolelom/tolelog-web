@@ -5,8 +5,10 @@ import { formatDate } from '../utils/format';
 import { BLOG_OWNER_ID } from '../utils/constants';
 import { resolveAssetUrl } from '../utils/assetUrl';
 import { cachedFetch } from '../utils/apiCache';
-import { PostListItem, Pagination, PostListWithPagination, Series, User, TagInfo } from '../types';
+import { PostListItem, Series, User, TagInfo } from '../types';
 import PageMeta from '../components/PageMeta';
+import Pager from '../components/Pager';
+import { parsePostListPage } from '../utils/postList';
 import { BlogJsonLd } from '../components/StructuredData';
 import { postPath } from '../utils/slug';
 import './HomePage.css';
@@ -128,16 +130,10 @@ export default function HomePage() {
 
         fetchPromise
             .then((res) => {
-                const data = res.data;
-                const list: PostListItem[] = Array.isArray(data) ? data : data.posts || [];
-                const pagination: Pagination | undefined = (data as PostListWithPagination).pagination;
+                const { posts: list, pagination, hasMore: more } = parsePostListPage(res.data, page, PAGE_SIZE);
                 setPosts(list);
-                if (pagination) {
-                    setTotalPages(pagination.total_pages || 0);
-                    setHasMore(page < pagination.total_pages);
-                } else {
-                    setHasMore(list.length === PAGE_SIZE);
-                }
+                if (pagination) setTotalPages(pagination.total_pages || 0);
+                setHasMore(more);
                 window.scrollTo(0, 0);
             })
             .catch((err: Error) => {
@@ -340,36 +336,25 @@ export default function HomePage() {
                 ))}
 
                 {!loading && !error && (posts.length > 0 || page > 1) && (
-                    <nav className="pagination home-pagination" aria-label="페이지 탐색">
-                        <button
-                            className="page-btn"
-                            disabled={page <= 1}
-                            onClick={() => {
-                                const params: Record<string, string> = {};
-                                if (tag) params.tag = tag;
-                                if (searchQuery) params.q = searchQuery;
-                                if (page - 1 > 1) params.page = String(page - 1);
-                                setSearchParams(params);
-                            }}
-                        >
-                            &larr; 이전
-                        </button>
-                        <span className="page-info">
-                            {totalPages > 0 ? `${page} / ${totalPages}` : page}
-                        </span>
-                        <button
-                            className="page-btn"
-                            disabled={!hasMore}
-                            onClick={() => {
-                                const params: Record<string, string> = { page: String(page + 1) };
-                                if (tag) params.tag = tag;
-                                if (searchQuery) params.q = searchQuery;
-                                setSearchParams(params);
-                            }}
-                        >
-                            다음 &rarr;
-                        </button>
-                    </nav>
+                    <Pager
+                        className="home-pagination"
+                        page={page}
+                        totalPages={totalPages}
+                        hasMore={hasMore}
+                        onPrev={() => {
+                            const params: Record<string, string> = {};
+                            if (tag) params.tag = tag;
+                            if (searchQuery) params.q = searchQuery;
+                            if (page - 1 > 1) params.page = String(page - 1);
+                            setSearchParams(params);
+                        }}
+                        onNext={() => {
+                            const params: Record<string, string> = { page: String(page + 1) };
+                            if (tag) params.tag = tag;
+                            if (searchQuery) params.q = searchQuery;
+                            setSearchParams(params);
+                        }}
+                    />
                 )}
             </div>
         </div>

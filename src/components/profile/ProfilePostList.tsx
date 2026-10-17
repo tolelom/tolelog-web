@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { PostListItem } from '../../types';
 import { formatDate } from '../../utils/format';
 import { postPath } from '../../utils/slug';
+import Pager from '../Pager';
 
 interface ProfilePostListProps {
     posts: PostListItem[];
@@ -95,25 +96,14 @@ export default function ProfilePostList({
             ))}
 
             {(posts.length > 0 || page > 1) && (
-                <nav className="pagination profile-pagination" aria-label="페이지 탐색">
-                    <button
-                        className="page-btn"
-                        disabled={page <= 1}
-                        onClick={onPrevPage}
-                    >
-                        &larr; 이전
-                    </button>
-                    <span className="page-info">
-                        {totalPages > 0 ? `${page} / ${totalPages}` : page}
-                    </span>
-                    <button
-                        className="page-btn"
-                        disabled={!hasMore}
-                        onClick={onNextPage}
-                    >
-                        다음 &rarr;
-                    </button>
-                </nav>
+                <Pager
+                    className="profile-pagination"
+                    page={page}
+                    totalPages={totalPages}
+                    hasMore={hasMore}
+                    onPrev={onPrevPage}
+                    onNext={onNextPage}
+                />
             )}
         </div>
     );
