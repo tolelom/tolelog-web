@@ -18,17 +18,15 @@ npm run preview     # Preview production build locally
 
 Environment: Node.js 20, npm. Copy `.env.example` to `.env` and set `VITE_API_URL` (defaults to `http://localhost:3000`).
 
-Vite config includes manual chunk splitting: `highlight.js/lib/common` is extracted into a separate `hljs` chunk.
-
 ## Architecture
 
-**Stack:** React 19 + Vite 7 + TypeScript + React Router 7. All source files are `.ts`/`.tsx`.
+**Stack:** React 19 + Vite 7 + TypeScript + React Router 6. All source files are `.ts`/`.tsx`.
 
 **State management:** React Context API via `AuthContext`/`AuthProvider` and `ThemeContext`/`ThemeProvider`. Auth tokens, user info, and theme preference persisted in `localStorage` using keys from `src/utils/constants.ts`.
 
 **Type definitions:** `src/types/index.ts` — shared interfaces for `User`, `Post`, `Comment`, `AuthData`, API response types, etc.
 
-**API layer:** `src/utils/api.ts` exports namespaced API objects, each with async functions using `fetch`. Includes `authenticatedFetch` helper with automatic token refresh on 401.
+**API layer:** `src/utils/api.ts` re-exports namespaced API objects implemented in `src/utils/api/`. They call `request()` in `src/utils/api/client.ts`, which refreshes the token on 401.
 - `POST_API` — post CRUD, search, pagination, tag filtering
 - `AUTH_API` — `login()`, `register()`, `refresh()`
 - `IMAGE_API` — FormData upload with Bearer token
@@ -51,7 +49,7 @@ Vite config includes manual chunk splitting: `highlight.js/lib/common` is extrac
 - `ThemeToggle` — dark/light mode toggle button.
 - `ImageUploadButton` — image upload with compression via `IMAGE_API`.
 
-**Routing:** React Router DOM with `BrowserRouter` in `App.tsx`. Pages are lazy-loaded with `React.lazy` + `Suspense`.
+**Routing:** `App.tsx` exports vite-react-ssg routes. Public pages load with `route.lazy`; private pages (editor, settings, drafts) use `React.lazy`.
 
 **Key routes:**
 | Path | Component | Auth |
