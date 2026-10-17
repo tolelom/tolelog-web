@@ -40,7 +40,7 @@ Vite config includes manual chunk splitting: `highlight.js/lib/common` is extrac
 - `src/utils/markdownParser.ts` — custom markdown parser with `parseBlocks()`, `renderBlock()`, `renderMarkdown()`, `parseInline()`. Supports headings, lists, tables, code blocks (highlight.js), blockquotes, images, checklists, footnotes, and KaTeX math (`$inline$`, `$$block$$`).
 - `src/utils/markdown.ts` — re-exports `renderMarkdown` from markdownParser
 - `src/utils/imageUpload.ts` — image validation, canvas-based compression, server upload wrapper
-- `src/utils/format.ts` — `stripMarkdown()`, `formatDate()`
+- `src/utils/format.ts` — `formatDate()`
 
 **Key components:**
 - `BlockEditor` — Typora/Notion-style block-based inline markdown editor with `forwardRef`. Exposes `wrapSelection()` via `useImperativeHandle`. Supports Ctrl+B/I/K/\` shortcuts. Images uploaded to server (Base64 as fallback).

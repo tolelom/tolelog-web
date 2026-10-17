@@ -66,7 +66,3 @@ export const uploadImageToServer = async (file: File, token: string): Promise<st
     }
     throw new Error('이미지 업로드에 실패했습니다');
 };
-
-export const createMarkdownImage = (url: string, fileName: string = '이미지'): string => {
-    return `![${fileName}](${url})`;
-};

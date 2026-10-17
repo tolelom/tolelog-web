@@ -7,7 +7,7 @@ vi.mock('../api', () => ({
     },
 }));
 
-import { validateImageFile, createMarkdownImage, uploadImageToServer } from '../imageUpload';
+import { validateImageFile, uploadImageToServer } from '../imageUpload';
 import { IMAGE_API } from '../api';
 
 function makeFile(name: string, size: number, type: string): File {
@@ -56,20 +56,6 @@ describe('validateImageFile', () => {
         const file = makeFile('edge.jpg', 5 * 1024 * 1024, 'image/jpeg');
         const result = validateImageFile(file);
         expect(result.valid).toBe(true);
-    });
-});
-
-describe('createMarkdownImage', () => {
-    it('produces standard markdown image syntax', () => {
-        expect(createMarkdownImage('/a.png', 'alt')).toBe('![alt](/a.png)');
-    });
-
-    it('uses default alt when none provided', () => {
-        expect(createMarkdownImage('/a.png')).toBe('![이미지](/a.png)');
-    });
-
-    it('preserves URL as-is (caller responsible for encoding)', () => {
-        expect(createMarkdownImage('https://example.com/path with spaces.png', 'x')).toBe('![x](https://example.com/path with spaces.png)');
     });
 });
 

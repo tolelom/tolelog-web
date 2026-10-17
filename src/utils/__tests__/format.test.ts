@@ -1,43 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { stripMarkdown, formatDate } from '../format';
-
-describe('stripMarkdown', () => {
-  it('removes image syntax', () => {
-    expect(stripMarkdown('![alt](url)')).toBe('');
-  });
-
-  it('converts links to just link text', () => {
-    expect(stripMarkdown('[click here](https://example.com)')).toBe('click here');
-  });
-
-  it('removes heading markers', () => {
-    expect(stripMarkdown('## Hello World')).toBe('Hello World');
-  });
-
-  it('removes bold/italic/strikethrough markers', () => {
-    expect(stripMarkdown('**bold** and *italic* and ~~deleted~~')).toBe('bold and italic and deleted');
-  });
-
-  it('removes backticks', () => {
-    expect(stripMarkdown('`code`')).toBe('code');
-  });
-
-  it('removes blockquote markers', () => {
-    expect(stripMarkdown('> quoted')).toBe('quoted');
-  });
-
-  it('collapses newlines to spaces', () => {
-    expect(stripMarkdown('line1\n\nline2')).toBe('line1 line2');
-  });
-
-  it('trims result', () => {
-    expect(stripMarkdown('  hello  ')).toBe('hello');
-  });
-
-  it('handles empty string', () => {
-    expect(stripMarkdown('')).toBe('');
-  });
-});
+import { formatDate } from '../format';
 
 describe('formatDate', () => {
   it('formats a valid date string', () => {

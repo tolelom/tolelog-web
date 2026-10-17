@@ -21,16 +21,6 @@ export function formatDateShort(dateStr: string | null | undefined): string {
     return d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
-export function stripMarkdown(text: string): string {
-    return text
-        .replace(/!\[.*?\]\(.*?\)/g, '')
-        .replace(/\[([^\]]*)\]\(.*?\)/g, '$1')
-        .replace(/#{1,6}\s/g, '')
-        .replace(/[*_~`>]/g, '')
-        .replace(/\n+/g, ' ')
-        .trim();
-}
-
 export function formatDate(dateStr: string | null | undefined): string {
     if (!dateStr) return '';
     const d = new Date(dateStr);
