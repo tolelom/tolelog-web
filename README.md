@@ -1,57 +1,86 @@
-# Tolelog
+# Tolelog Web
 
-블로그 플랫폼의 React 프론트엔드.
-백엔드는 [tolelog-api](https://github.com/tolelom/tolelog-api) 참고.
+> 개인 블로그 플랫폼의 웹 프론트엔드
 
-## Tech Stack
+React 19 · TypeScript · Vite 7 · vite-react-ssg · 서비스 https://blog.tolelom.xyz
 
-- **Frontend**: React 19 + Vite 7 + React Router 7 + TypeScript 5.8
-- **State Management**: React Context API (Auth, Theme)
-- **Editor**: Typora/Notion 스타일 블록 기반 마크다운 에디터
-- **Styling**: CSS Custom Properties (다크/라이트 테마)
-- **Markdown**: 커스텀 파서 + highlight.js + KaTeX + DOMPurify
-- **Test**: Vitest + 커버리지 리포트
-- **Deploy**: GitHub Actions → Docker (Nginx Alpine) → GHCR → GitOps 배포 (Renovate digest 핀 + git-sync-deploy)
+## 개요
 
-## Features
+Tolelog는 마크다운으로 글을 쓰고 시리즈로 묶어 발행하는 블로그 플랫폼이다. 이 저장소는 그 웹 프론트엔드로, 글 목록과 상세, 블록 기반 마크다운 에디터, 댓글, 좋아요, 시리즈, 프로필 화면을 제공한다.
 
-### 에디터 / 마크다운
-- 블록 기반 인라인 마크다운 에디터
-- 헤딩, 리스트, 테이블, 코드블록, 블록인용, 체크리스트, 각주
-- highlight.js 코드 하이라이팅
-- KaTeX 수식 렌더링 (inline, block)
-- 이미지 업로드 (자동 압축, Canvas 기반, 최대 5MB)
-- 자동 저장 (1초 디바운스)
-- 임시저장/드래프트 관리
+공개 페이지는 빌드 시점에 HTML로 미리 렌더링한다(SSG). 빌드가 백엔드의 `sitemap.xml`을 읽어 공개 글, 사용자, 시리즈 경로를 찾고, 각 경로를 정적 HTML로 만든다. 브라우저는 이 HTML을 받은 뒤 React로 하이드레이션한다. 에디터, 설정, 임시저장 목록처럼 로그인이 필요한 화면은 미리 렌더링하지 않는다.
 
-### 소셜
-- 댓글
-- 좋아요
-- 태그 자동완성
-- 시리즈 (연재 묶기, 시리즈 내 네비게이션)
+새 글이 미리 렌더링 결과에 들어가도록 CI가 매일 한 번 다시 빌드한다.
 
-### 사용자
-- JWT 인증 (로그인/회원가입/토큰 갱신)
-- 사용자 프로필 / 아바타
-- 설정 페이지
-- 다크/라이트 테마 토글
+## 시스템 구성
 
-### 인프라
-- GitHub Actions CI/CD (lint → test → build → GHCR 이미지 푸시)
-- PR 커버리지 코멘트 자동 작성
-- Docker + Nginx (Gzip, 보안 헤더, 캐싱, SPA 라우팅)
-- API 캐싱 레이어
+```mermaid
+flowchart LR
+    Browser["브라우저"] -- "HTML, JS" --> Web["tolelog-web<br/>nginx, 미리 렌더링한 HTML"]
+    Browser -- "REST /api/v1" --> API["tolelog-api<br/>Go Fiber"]
+    API --> DB[("MySQL")]
+    Build["빌드(vite-react-ssg)"] -. "sitemap.xml" .-> API
+    Build -. "dist" .-> Web
+```
 
-## Getting Started
+```mermaid
+flowchart LR
+    Push["main push<br/>매일 재빌드"] --> GHA["GitHub Actions<br/>lint, test, build"] --> GHCR["GHCR 이미지"] --> Renovate["Renovate<br/>digest 갱신"] --> Sync["git-sync<br/>서버 배포"]
+```
+
+| 저장소 | 역할 |
+|---|---|
+| tolelog-web | 웹 프론트엔드(이 저장소) |
+| [tolelog-api](https://github.com/tolelom/tolelog-api) | REST API, 인증, 이미지 업로드, RSS, 사이트맵 |
+
+## 기능
+
+- 블록 기반 마크다운 에디터: 편집 중인 블록만 원문으로, 나머지는 렌더링해 표시. 자동 저장, 임시저장 목록, 미리보기
+- 마크다운 렌더링: 표, 각주, 코드 하이라이트(highlight.js), 수식(KaTeX), HTML 정제(DOMPurify)
+- 이미지 업로드: 브라우저에서 Canvas로 리사이즈와 압축 후 업로드
+- 글 상세의 목차, 시리즈 이전/다음 이동
+- 댓글, 좋아요, 태그 자동완성과 태그 필터, 검색
+- 사용자 프로필, 아바타, 비밀번호 변경, 계정 삭제
+- 다크/라이트 테마
+- 페이지별 메타 태그와 구조화 데이터(SEO)
+- Sentry 오류 보고(DSN 설정 시)
+
+## 구조
+
+| 경로 | 책임 |
+|---|---|
+| `src/App.tsx` | 라우트 정의. 공개 라우트는 SSG 대상, 인증 라우트는 `PrivateRoute` |
+| `src/pages` | 화면 단위 컴포넌트(홈, 글 상세, 에디터, 시리즈, 프로필, 설정 등) |
+| `src/components` | 에디터, 댓글, 내비게이션, 메타 태그 등 공용 컴포넌트 |
+| `src/context` | 인증, 테마, 토스트 상태 |
+| `src/hooks` | 자동 저장, 목차, 좋아요, 시리즈 내비게이션 등 |
+| `src/utils/api` | 영역별 API 클라이언트(auth, posts, comments, series) |
+| `src/utils/markdown` | 마크다운 파서와 렌더러 |
+| `vite.config.ts` | SSG 대상 경로 결정(sitemap 조회, 인증 라우트 제외) |
+| `scripts/decode-ssg-filenames.mjs` | 미리 렌더링한 파일 이름의 퍼센트 인코딩을 풀어 한글 경로를 nginx가 찾게 함 |
+| `nginx.conf`, `nginx/` | 정적 파일 서빙, gzip, 캐시, 보안 헤더 |
+
+## 실행
+
+Node.js와 로컬 [tolelog-api](https://github.com/tolelom/tolelog-api)가 필요하다.
 
 ```bash
+git clone https://github.com/tolelom/tolelog-web.git
+cd tolelog-web
+
 npm install
-
 cp .env.example .env
-# VITE_API_URL 설정 (기본값: http://localhost:3000)
-
-npm run dev       # 개발 서버 (port 5173)
-npm run build     # 프로덕션 빌드
-npm run lint      # 린트
-npm run test      # 테스트
+npm run dev
 ```
+
+`.env.example`과 개발 서버 프록시는 API를 `localhost:3000`으로 본다. tolelog-api를 `PORT=3000`으로 띄우거나 `VITE_API_URL`을 바꾼다. `VITE_SSG_API_URL`이 없으면 빌드는 `VITE_API_URL`, 그것도 없으면 운영 API의 sitemap을 읽는다.
+
+| 명령 | 용도 |
+|---|---|
+| `npm run dev` | 개발 서버 |
+| `npm run build` | 타입 검사, SSG 빌드 |
+| `npm run build:csr` | 미리 렌더링 없는 빌드 |
+| `npm run test` | Vitest 테스트 |
+| `npm run test:coverage` | 커버리지 포함 테스트 |
+| `npm run lint` | ESLint |
+| `npm run type-check` | TypeScript 타입 검사 |
