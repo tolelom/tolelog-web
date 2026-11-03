@@ -14,6 +14,8 @@ npm run build       # Type-check (tsc --noEmit) then Vite production build (outp
 npm run lint        # ESLint flat config (no-unused-vars ignores ^[A-Z_] pattern)
 npm run type-check  # TypeScript type checking only (tsc --noEmit)
 npm run preview     # Preview production build locally
+npm run contract:sync   # Copy ../tolelog-api/docs/swagger.json (or GitHub main with -- --remote) and regenerate src/types/api.gen.ts
+npm run contract:check  # Fail if src/types/api.gen.ts is stale vs api-contract/swagger.json
 ```
 
 Environment: Node.js 20, npm. Copy `.env.example` to `.env` and set `VITE_API_URL` (defaults to `http://localhost:3000`).
@@ -22,23 +24,24 @@ Environment: Node.js 20, npm. Copy `.env.example` to `.env` and set `VITE_API_UR
 
 **Stack:** React 19 + Vite 7 + TypeScript + React Router 6. All source files are `.ts`/`.tsx`.
 
-**State management:** React Context API via `AuthContext`/`AuthProvider` and `ThemeContext`/`ThemeProvider`. Auth tokens, user info, and theme preference persisted in `localStorage` using keys from `src/utils/constants.ts`.
+**State management:** React Context API via `AuthContext`/`AuthProvider` and `ThemeContext`/`ThemeProvider`. Auth tokens, user info, and theme preference persisted in `localStorage` using keys from `src/lib/constants.ts`.
 
-**Type definitions:** `src/types/index.ts` — shared interfaces for `User`, `Post`, `Comment`, `AuthData`, API response types, etc.
+**Source layout:** `src/lib/` holds cross-cutting infrastructure with no domain knowledge; `src/features/<feature>/` holds domain logic that isn't a component or hook (tests sit in each folder's `__tests__/`). `pages/`, `components/`, `hooks/`, `context/` keep their roles.
+- `src/lib/api/` — API client and endpoints, response cache (`cache.ts`), server input limits (`limits.ts`)
+- `src/lib/` — `constants.ts` (`API_BASE_URL`, `STORAGE_KEYS`, `AUTO_SAVE_DELAY_MS`, `IMAGE_CONSTRAINTS`), `notify.ts` (toast bridge), `errorReporting.ts` (lazy Sentry), `format.ts` (dates), `assetUrl.ts`, `siteUrl.ts`
+- `src/features/markdown/` — custom markdown parser/renderer; import from the folder (`index.ts`: `parseBlocks()`, `renderBlock()`, `renderMarkdown()`, `parseInline()`). Supports headings, lists, tables, code blocks (highlight.js), blockquotes, images, checklists, footnotes, and KaTeX math (`$inline$`, `$$block$$`).
+- `src/features/posts/` — list paging (`list.ts`), prerender meta (`meta.ts`), description/og:image (`summary.ts`), editor limit checks (`validation.ts`), slug/post path (`slug.ts`, must match the API's `internal/permalink`), tags
+- `src/features/images/` — image validation, canvas-based compression, server upload wrapper
+- `src/features/auth/` — login/register field validation (password limit is UTF-8 bytes, like bcrypt on the API)
 
-**API layer:** `src/utils/api.ts` re-exports namespaced API objects implemented in `src/utils/api/`. They call `request()` in `src/utils/api/client.ts`, which refreshes the token on 401.
+**Type definitions:** `src/types/index.ts` — API types are aliases of `src/types/api.gen.ts`, which is generated from the vendored API contract `api-contract/swagger.json` (tolelog-api `docs/swagger.json`). Never edit `api.gen.ts`; run `npm run contract:sync` when the API changes (or `contract:types` after editing the vendored spec). A test fails if the generated file is stale, and `src/lib/api/__tests__/limits.test.ts` fails if `limits.ts` drifts from the spec. Non-API types (markdown blocks, editor form/draft) are hand-written there too.
+
+**API layer:** `src/lib/api/index.ts` re-exports namespaced API objects implemented in `src/lib/api/`. They call `request()` in `src/lib/api/client.ts`, which refreshes the token on 401.
 - `POST_API` — post CRUD, search, pagination, tag filtering
 - `AUTH_API` — `login()`, `register()`, `refresh()`
 - `IMAGE_API` — FormData upload with Bearer token
 - `USER_API` — `getProfile()`, `uploadAvatar()`
 - `COMMENT_API` — `getComments()`, `createComment()`, `deleteComment()`
-
-**Shared utilities:**
-- `src/utils/constants.ts` — `API_BASE_URL`, `STORAGE_KEYS`, `AUTO_SAVE_DELAY_MS`, `IMAGE_CONSTRAINTS`
-- `src/utils/markdownParser.ts` — custom markdown parser with `parseBlocks()`, `renderBlock()`, `renderMarkdown()`, `parseInline()`. Supports headings, lists, tables, code blocks (highlight.js), blockquotes, images, checklists, footnotes, and KaTeX math (`$inline$`, `$$block$$`).
-- `src/utils/markdown.ts` — re-exports `renderMarkdown` from markdownParser
-- `src/utils/imageUpload.ts` — image validation, canvas-based compression, server upload wrapper
-- `src/utils/format.ts` — `formatDate()`
 
 **Key components:**
 - `BlockEditor` — Typora/Notion-style block-based inline markdown editor with `forwardRef`. Exposes `wrapSelection()` via `useImperativeHandle`. Supports Ctrl+B/I/K/\` shortcuts. Images uploaded to server (Base64 as fallback).
