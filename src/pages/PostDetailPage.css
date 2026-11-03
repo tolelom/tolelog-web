@@ -29,7 +29,6 @@
 .post-meta .updated { color: var(--accent-color); font-size: 12px; }
 .post-meta .views { color: var(--text-muted); }
 
-/* 마크다운 콘텐츠 — .md-body 기반, PostDetailPage 전용 간격 오버라이드 */
 .markdown-content h1 { margin: 40px 0 16px 0; }
 .markdown-content h2 { margin: 32px 0 12px 0; }
 .markdown-content h3 { margin: 24px 0 8px 0; }
@@ -48,19 +47,17 @@
 .markdown-content .footnotes { margin-top: 40px; }
 .markdown-content .math-block { margin: 20px 0; }
 
-/* 태그 */
 .post-tags {
     display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;
 }
 
-/* 코드 블록: 터치 디바이스 복사 버튼 가시성 */
+/* 터치 기기에는 hover 가 없어 복사 버튼을 늘 보이게 한다 */
 @media (hover: none) {
     .markdown-content .code-copy-btn {
         opacity: 0.7;
     }
 }
 
-/* 좋아요 버튼 */
 .post-like-section {
     display: flex; justify-content: center; margin: 32px 0;
 }
@@ -83,7 +80,6 @@
 .post-like-icon { font-size: 20px; line-height: 1; }
 .post-like-count { font-size: 15px; font-weight: 600; }
 
-/* 시리즈 네비게이션 */
 .series-nav {
     margin: 32px 0; padding: 20px 24px; border-radius: 8px;
     background-color: var(--bg-secondary); border: 1px solid var(--border-light);
@@ -170,7 +166,6 @@
 }
 .btn-delete:hover { background-color: var(--btn-danger-hover); }
 
-/* 삭제 확인 모달 */
 .delete-modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background-color: var(--bg-overlay); display: flex;
@@ -205,7 +200,6 @@
 .btn-delete-cancel:disabled { opacity: 0.6; cursor: not-allowed; }
 .delete-error { font-size: 13px; color: var(--error-text); align-self: center; }
 
-/* 브레드크럼 네비게이션 */
 .post-breadcrumb {
     display: flex; align-items: center; gap: 8px; margin-bottom: 20px;
     font-size: 13px; color: var(--text-muted);
@@ -221,7 +215,6 @@
     white-space: nowrap; max-width: 300px;
 }
 
-/* 목차 (TOC) */
 .toc-panel {
     display: none;
     padding: 14px 16px;
@@ -287,7 +280,6 @@
     font-weight: 600;
 }
 
-/* 모바일 목차 */
 .toc-mobile {
     margin-bottom: 20px;
     border: 1px solid var(--border-light);

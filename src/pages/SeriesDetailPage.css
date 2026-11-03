@@ -87,14 +87,12 @@
     font-size: 12px; color: var(--text-muted);
 }
 
-/* 시리즈 액션 에러 */
 .series-action-error {
     color: var(--error-text);
     font-size: 13px;
     margin-bottom: 12px;
 }
 
-/* ═══ 글 항목 내 관리 버튼 그룹 ═══ */
 
 .series-post-actions {
     display: flex;
@@ -104,7 +102,6 @@
     margin-left: auto;
 }
 
-/* 글 제거 버튼 */
 .series-post-remove-btn {
     display: flex;
     align-items: center;
@@ -125,7 +122,6 @@
     background: var(--btn-danger-hover);
 }
 
-/* 순서 이동 버튼 (위/아래) */
 .series-post-move-btn {
     display: flex;
     align-items: center;

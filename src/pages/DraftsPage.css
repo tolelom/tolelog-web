@@ -105,7 +105,6 @@
     flex: 1;
 }
 
-/* 반응형 */
 @media (max-width: 768px) {
     .drafts-page { margin: 1rem auto; }
     .drafts-title { font-size: 1.25rem; }
