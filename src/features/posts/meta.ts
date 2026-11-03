@@ -1,5 +1,5 @@
-import { API_BASE_URL } from '../lib/constants';
-import type { PostListItem } from '../types';
+import { API_BASE_URL } from '../../lib/constants';
+import type { PostListItem } from '../../types';
 
 let listPromise: Promise<PostListItem[]> | null = null;
 

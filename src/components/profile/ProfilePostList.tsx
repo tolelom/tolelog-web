@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom';
 import { PostListItem } from '../../types';
 import { formatDate } from '../../lib/format';
-import { postPath } from '../../utils/slug';
+import { postPath } from '../../features/posts/slug';
 import Pager from '../Pager';
 import TagChip from '../TagChip';
-import { splitTags } from '../../utils/tags';
+import { splitTags } from '../../features/posts/tags';
 
 interface ProfilePostListProps {
     posts: PostListItem[];

@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, useLoaderData, Link } from 'react-router-dom';
-import { parsePostSlugId, postPath } from '../utils/slug';
+import { parsePostSlugId, postPath } from '../features/posts/slug';
 import { AuthContext } from '../context/AuthContext';
 import { POST_API } from '../lib/api';
 import { invalidateCache } from '../lib/api/cache';
@@ -22,8 +22,8 @@ import { ArticleJsonLd, BreadcrumbJsonLd } from '../components/StructuredData';
 import TocList from '../components/post/TocList';
 import SeriesNavigation from '../components/post/SeriesNavigation';
 import DeletePostModal from '../components/post/DeletePostModal';
-import { splitTags } from '../utils/tags';
-import { firstHttpImage, plainTextExcerpt } from '../utils/postSummary';
+import { splitTags } from '../features/posts/tags';
+import { firstHttpImage, plainTextExcerpt } from '../features/posts/summary';
 import 'highlight.js/styles/atom-one-dark.css';
 import './PostDetailPage.css';
 
