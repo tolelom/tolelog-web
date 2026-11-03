@@ -1,4 +1,4 @@
-// Shared type definitions based on backend API responses
+// 백엔드 API 응답의 모양이다. 필드 이름은 서버 JSON 그대로(snake_case) 둔다.
 
 export interface User {
     id: number;
@@ -85,8 +85,6 @@ export interface CommentListResponse {
     total: number;
 }
 
-// Series types
-
 export interface Series {
     id: number;
     title: string;
@@ -124,13 +122,10 @@ export interface SeriesInfo {
     series_order: number;
 }
 
-// Tag info from /api/v1/tags
 export interface TagInfo {
     name: string;
     count: number;
 }
-
-// Block types for markdown parser (discriminated union)
 
 export interface HeadingBlock {
     type: 'heading';
@@ -229,7 +224,6 @@ export type Block =
     | ImageBlock
     | FootnoteDefBlock;
 
-// Draft data for auto-save
 export interface DraftData {
     title: string;
     content: string;
@@ -238,7 +232,6 @@ export interface DraftData {
     savedAt: string;
 }
 
-// Form data for post creation/editing
 export interface PostFormData {
     title: string;
     content: string;
@@ -246,7 +239,6 @@ export interface PostFormData {
     tags: string;
 }
 
-// Image validation result
 export interface ImageValidationResult {
     valid: boolean;
     error?: string;

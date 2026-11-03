@@ -1,28 +1,47 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AuthContext, type LoginParams } from './AuthContext';
 import { AUTH_API } from '../utils/api';
 import { AUTH_TOKENS_EVENT, type AuthTokens } from '../utils/api/client';
 import { STORAGE_KEYS } from '../utils/constants';
 
-// SSG/SSR 빌드 단계에서는 window/localStorage 가 없으므로 안전 가드.
 const isBrowser = typeof window !== 'undefined';
 
-function readLocalStorage(key: string): string | null {
+interface SessionUser {
+    username: string | null;
+    userId: number | null;
+    avatarUrl: string | null;
+}
+
+const NO_USER: SessionUser = { username: null, userId: null, avatarUrl: null };
+
+function userFromJson(json: string): SessionUser {
+    const parsed = JSON.parse(json);
+    return {
+        username: parsed?.username ?? null,
+        userId: parsed?.user_id ?? null,
+        avatarUrl: parsed?.avatar_url ?? null,
+    };
+}
+
+function readStoredToken(key: string): string | null {
     if (!isBrowser) return null;
     try { return localStorage.getItem(key); } catch { return null; }
 }
 
-function safeParseUser(key: string): string | number | null {
-    if (!isBrowser) return null;
+function readStoredUser(): SessionUser {
+    if (!isBrowser) return NO_USER;
     try {
-        const str = localStorage.getItem(STORAGE_KEYS.USER);
-        if (!str) return null;
-        const parsed = JSON.parse(str);
-        return parsed?.[key] ?? null;
+        const json = localStorage.getItem(STORAGE_KEYS.USER);
+        return json ? userFromJson(json) : NO_USER;
     } catch {
         localStorage.removeItem(STORAGE_KEYS.USER);
-        return null;
+        return NO_USER;
     }
+}
+
+function persist(key: string, value: string | null): void {
+    if (value) localStorage.setItem(key, value);
+    else localStorage.removeItem(key);
 }
 
 interface AuthProviderProps {
@@ -34,57 +53,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // 읽기 전(ready=false)에는 저장 effect 가 localStorage 를 지우지 않고, 로그인이 필요한 화면은 판단을 미룬다.
     const [token, setToken] = useState<string | null>(null);
     const [refreshToken, setRefreshToken] = useState<string | null>(null);
-    const [username, setUsername] = useState<string | null>(null);
-    const [userId, setUserId] = useState<number | null>(null);
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [user, setUser] = useState<SessionUser>(NO_USER);
     const [ready, setReady] = useState(false);
+    const { username, userId, avatarUrl } = user;
+
+    const clearSession = useCallback(() => {
+        setToken(null);
+        setRefreshToken(null);
+        setUser(NO_USER);
+    }, []);
 
     useEffect(() => {
-        setToken(readLocalStorage(STORAGE_KEYS.TOKEN));
-        setRefreshToken(readLocalStorage(STORAGE_KEYS.REFRESH_TOKEN));
-        setUsername(safeParseUser('username') as string | null);
-        setUserId(safeParseUser('user_id') as number | null);
-        setAvatarUrl(safeParseUser('avatar_url') as string | null);
+        setToken(readStoredToken(STORAGE_KEYS.TOKEN));
+        setRefreshToken(readStoredToken(STORAGE_KEYS.REFRESH_TOKEN));
+        setUser(readStoredUser());
         setReady(true);
     }, []);
 
     useEffect(() => {
-        if (!ready) return;
-        if (token) {
-            localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-        } else {
-            localStorage.removeItem(STORAGE_KEYS.TOKEN);
-        }
+        if (ready) persist(STORAGE_KEYS.TOKEN, token);
     }, [token, ready]);
 
     useEffect(() => {
-        if (!ready) return;
-        if (refreshToken) {
-            localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
-        } else {
-            localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-        }
+        if (ready) persist(STORAGE_KEYS.REFRESH_TOKEN, refreshToken);
     }, [refreshToken, ready]);
 
     useEffect(() => {
         if (!ready) return;
-        if (username && userId) {
-            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify({ username, user_id: userId, avatar_url: avatarUrl || '' }));
-        } else {
-            localStorage.removeItem(STORAGE_KEYS.USER);
-        }
+        const json = username && userId
+            ? JSON.stringify({ username, user_id: userId, avatar_url: avatarUrl || '' })
+            : null;
+        persist(STORAGE_KEYS.USER, json);
     }, [username, userId, avatarUrl, ready]);
 
-    // API 클라이언트가 토큰을 갱신하거나 갱신에 실패하면 상태를 맞춘다. 이미 로그아웃했으면 늦게 온 새 토큰은 버린다.
+    // 이미 로그아웃했으면 늦게 도착한 갱신 토큰으로 다시 로그인되지 않게 버린다.
     useEffect(() => {
         const handleTokens = (e: Event) => {
             const tokens = (e as CustomEvent<AuthTokens | null>).detail;
             if (!tokens) {
-                setToken(null);
-                setRefreshToken(null);
-                setUsername(null);
-                setUserId(null);
-                setAvatarUrl(null);
+                clearSession();
                 return;
             }
             setToken(prev => (prev === null ? null : tokens.token));
@@ -92,27 +99,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
         window.addEventListener(AUTH_TOKENS_EVENT, handleTokens);
         return () => window.removeEventListener(AUTH_TOKENS_EVENT, handleTokens);
-    }, []);
+    }, [clearSession]);
 
-    // 다른 탭에서 로그아웃/로그인 시 동기화
     useEffect(() => {
-        const handleStorage = (e: StorageEvent) => {
+        const syncFromOtherTab = (e: StorageEvent) => {
             if (e.key === STORAGE_KEYS.TOKEN) {
                 if (!e.newValue) {
-                    setToken(null);
-                    setRefreshToken(null);
-                    setUsername(null);
-                    setUserId(null);
-                    setAvatarUrl(null);
+                    clearSession();
                 } else {
                     setToken(e.newValue);
                     setRefreshToken(localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN));
-                    const user = safeParseUser('username') as string | null;
-                    const uid = safeParseUser('user_id') as number | null;
-                    const avatar = safeParseUser('avatar_url') as string | null;
-                    setUsername(user);
-                    setUserId(uid);
-                    setAvatarUrl(avatar);
+                    setUser(readStoredUser());
                 }
             }
             if (e.key === STORAGE_KEYS.REFRESH_TOKEN) {
@@ -120,42 +117,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
             }
             if (e.key === STORAGE_KEYS.USER) {
                 if (!e.newValue) {
-                    setUsername(null);
-                    setUserId(null);
-                    setAvatarUrl(null);
+                    setUser(NO_USER);
                 } else {
-                    try {
-                        const parsed = JSON.parse(e.newValue);
-                        setUsername(parsed?.username ?? null);
-                        setUserId(parsed?.user_id ?? null);
-                        setAvatarUrl(parsed?.avatar_url ?? null);
-                    } catch { /* ignore */ }
+                    try { setUser(userFromJson(e.newValue)); } catch { /* 깨진 값이면 지금 상태를 둔다 */ }
                 }
             }
         };
-        window.addEventListener('storage', handleStorage);
-        return () => window.removeEventListener('storage', handleStorage);
-    }, []);
+        window.addEventListener('storage', syncFromOtherTab);
+        return () => window.removeEventListener('storage', syncFromOtherTab);
+    }, [clearSession]);
 
-    const login = ({ token: newToken, refreshToken: newRefreshToken, username: newUsername, userId: newUserId, avatarUrl: newAvatarUrl }: LoginParams) => {
-        setToken(newToken);
-        setRefreshToken(newRefreshToken);
-        setUsername(newUsername);
-        setUserId(newUserId);
-        setAvatarUrl(newAvatarUrl || null);
+    const login = (params: LoginParams) => {
+        setToken(params.token);
+        setRefreshToken(params.refreshToken);
+        setUser({ username: params.username, userId: params.userId, avatarUrl: params.avatarUrl || null });
     };
 
     const logout = () => {
-        const currentToken = token;
-        if (currentToken) {
-            AUTH_API.logout(currentToken).catch((err) => console.warn('auth: logout request failed:', err));
+        if (token) {
+            AUTH_API.logout(token).catch((err) => console.warn('auth: logout request failed:', err));
         }
-        setToken(null);
-        setRefreshToken(null);
-        setUsername(null);
-        setUserId(null);
-        setAvatarUrl(null);
+        clearSession();
     };
+
+    const setAvatarUrl = useCallback((url: string | null) => {
+        setUser(prev => ({ ...prev, avatarUrl: url }));
+    }, []);
 
     return (
         <AuthContext.Provider value={{ token, refreshToken, username, userId, avatarUrl, ready, login, logout, setAvatarUrl }}>

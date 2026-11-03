@@ -13,9 +13,14 @@ const DURATIONS: Record<ToastType, number> = { success: 3000, info: 4000, error:
 const MAX_STACK = 3;
 
 interface TimerRecord {
-    timeoutId: ReturnType<typeof setTimeout>;
+    // 마우스를 올려 멈춘 동안은 null 이다.
+    timeoutId: ReturnType<typeof setTimeout> | null;
     startedAt: number;
     remaining: number;
+}
+
+function clearTimer(timer: TimerRecord | undefined): void {
+    if (timer?.timeoutId) clearTimeout(timer.timeoutId);
 }
 
 interface ToastProviderProps {
@@ -34,16 +39,13 @@ export function ToastProvider({ children }: ToastProviderProps) {
     const timersRef = useRef<Map<string, TimerRecord>>(new Map());
 
     const dismiss = useCallback((id: string) => {
-        const timer = timersRef.current.get(id);
-        if (timer) {
-            clearTimeout(timer.timeoutId);
-            timersRef.current.delete(id);
-        }
+        clearTimer(timersRef.current.get(id));
+        timersRef.current.delete(id);
         setToasts(prev => prev.filter(t => t.id !== id));
     }, []);
 
     const dismissAll = useCallback(() => {
-        timersRef.current.forEach(t => clearTimeout(t.timeoutId));
+        timersRef.current.forEach(clearTimer);
         timersRef.current.clear();
         setToasts([]);
     }, []);
@@ -66,11 +68,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
             if (next.length > MAX_STACK) {
                 const toEvict = next.slice(0, next.length - MAX_STACK);
                 toEvict.forEach(ev => {
-                    const t = timersRef.current.get(ev.id);
-                    if (t) {
-                        clearTimeout(t.timeoutId);
-                        timersRef.current.delete(ev.id);
-                    }
+                    clearTimer(timersRef.current.get(ev.id));
+                    timersRef.current.delete(ev.id);
                 });
                 return next.slice(-MAX_STACK);
             }
@@ -83,16 +82,16 @@ export function ToastProvider({ children }: ToastProviderProps) {
 
     const onHoverStart = useCallback((id: string) => {
         const timer = timersRef.current.get(id);
-        if (!timer) return;
+        if (!timer?.timeoutId) return;
         clearTimeout(timer.timeoutId);
         const elapsed = Date.now() - timer.startedAt;
         const remaining = Math.max(0, timer.remaining - elapsed);
-        timersRef.current.set(id, { ...timer, timeoutId: 0 as unknown as ReturnType<typeof setTimeout>, remaining });
+        timersRef.current.set(id, { ...timer, timeoutId: null, remaining });
     }, []);
 
     const onHoverEnd = useCallback((id: string) => {
         const timer = timersRef.current.get(id);
-        if (!timer) return;
+        if (!timer || timer.timeoutId) return;
         scheduleDismiss(id, timer.remaining);
     }, [scheduleDismiss]);
 
@@ -115,11 +114,8 @@ export function ToastProvider({ children }: ToastProviderProps) {
             setToasts(prev => {
                 if (prev.length === 0) return prev;
                 const last = prev[prev.length - 1];
-                const timer = timersRef.current.get(last.id);
-                if (timer) {
-                    clearTimeout(timer.timeoutId);
-                    timersRef.current.delete(last.id);
-                }
+                clearTimer(timersRef.current.get(last.id));
+                timersRef.current.delete(last.id);
                 return prev.slice(0, -1);
             });
         };
@@ -130,7 +126,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
     useEffect(() => {
         const timers = timersRef.current;
         return () => {
-            timers.forEach(t => clearTimeout(t.timeoutId));
+            timers.forEach(clearTimer);
             timers.clear();
         };
     }, []);

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import type { FormErrors } from './authValidation';
 import './AuthForm.css';
 
 interface AuthFormField {
@@ -8,17 +9,13 @@ interface AuthFormField {
     autoComplete?: string;
 }
 
-interface AuthFormErrors {
-    [key: string]: string;
-}
-
 interface AuthFormProps {
     title: string;
     fields: AuthFormField[];
     submitLabel: string;
     loadingLabel: string;
     onSubmit: (formData: Record<string, string>) => Promise<void>;
-    validate: (formData: Record<string, string>) => AuthFormErrors;
+    validate: (formData: Record<string, string>) => FormErrors;
 }
 
 export default function AuthForm({ title, fields, submitLabel, loadingLabel, onSubmit, validate }: AuthFormProps) {
@@ -28,7 +25,7 @@ export default function AuthForm({ title, fields, submitLabel, loadingLabel, onS
         return initial;
     });
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [errors, setErrors] = useState<AuthFormErrors>({});
+    const [errors, setErrors] = useState<FormErrors>({});
     const firstInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {

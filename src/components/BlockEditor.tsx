@@ -3,155 +3,88 @@ import { parseBlocks, renderBlock } from '../utils/markdownParser';
 import { validateImageFile, compressImage, uploadImageToServer } from '../utils/imageUpload';
 import { useCopyCodeBlock } from '../hooks/useCopyCodeBlock';
 import DOMPurify from 'dompurify';
+import { FORMAT_MARKS, SHORTCUT_FORMATS } from './editorFormats';
+import ImageBlockEditor from './blockEditor/ImageBlockEditor';
+import { parseImageLine, withImageWidth } from './blockEditor/imageMarkdown';
 import './BlockEditor.css';
-import type { Block } from '../types';
 
-// Internal block representation used by the editor
+const BLOCK_SEPARATOR = '\n\n';
+// 블록 안의 버튼(이미지 크기 등)을 누르는 동안 편집이 닫히지 않도록 비활성화를 조금 미룬다.
+const DEACTIVATE_DELAY_MS = 100;
+
 interface EditorBlock {
-    raw: string;
-    type: string;
     id: string;
-    alt?: string;
-    src?: string;
-    width?: string | null;
+    raw: string;
 }
+
+type BlockElement = HTMLTextAreaElement | HTMLDivElement;
 
 export interface BlockEditorHandle {
     wrapSelection: (before: string, after: string) => void;
-    getActiveTextarea: () => HTMLTextAreaElement | HTMLDivElement | null;
+    getActiveTextarea: () => BlockElement | null;
 }
+
+export type InsertImage = (src: string, fileName: string) => void;
 
 interface BlockEditorProps {
     content: string;
     onChange: (raw: string) => void;
-    onImageInsert?: React.MutableRefObject<((base64Data: string, fileName: string) => void) | null>;
+    onImageInsert?: React.MutableRefObject<InsertImage | null>;
     token?: string | null;
 }
 
-interface SizeOption {
-    label: string;
-    value: string | null;
+function newBlock(raw: string = ''): EditorBlock {
+    return { id: crypto.randomUUID(), raw };
 }
-
-function genBlockId(): string { return crypto.randomUUID(); }
-
-function startImageDrag(
-    startX: number,
-    index: number,
-    wrapperEl: HTMLElement,
-    handleImageResize: (index: number, widthValue: string | null) => void
-) {
-    const editorEl = wrapperEl.closest('.block-image-editor') as HTMLElement | null;
-    const availableWidth = editorEl ? editorEl.getBoundingClientRect().width : 0;
-    if (!availableWidth) return;
-
-    const startWidthPx = wrapperEl.getBoundingClientRect().width;
-    const calcPct = (currentX: number): number => {
-        const newWidthPx = Math.max(startWidthPx + (currentX - startX), 40);
-        return Math.min(Math.round((newWidthPx / availableWidth) * 100), 100);
-    };
-
-    const onMouseMove = (e: MouseEvent) => { wrapperEl.style.width = `${calcPct(e.clientX)}%`; };
-    const onMouseUp = (e: MouseEvent) => {
-        handleImageResize(index, `${calcPct(e.clientX)}%`);
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        document.body.style.cursor = '';
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-        e.preventDefault();
-        wrapperEl.style.width = `${calcPct(e.touches[0].clientX)}%`;
-    };
-    const onTouchEnd = (e: TouchEvent) => {
-        handleImageResize(index, `${calcPct(e.changedTouches[0].clientX)}%`);
-        document.removeEventListener('touchmove', onTouchMove);
-        document.removeEventListener('touchend', onTouchEnd);
-    };
-
-    document.body.style.cursor = 'col-resize';
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
-    document.addEventListener('touchmove', onTouchMove, { passive: false });
-    document.addEventListener('touchend', onTouchEnd);
-}
-
-const SIZE_OPTIONS: SizeOption[] = [
-    { label: '작게', value: '25%' },
-    { label: '보통', value: '50%' },
-    { label: '크게', value: '75%' },
-    { label: '원본', value: null },
-];
 
 const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function BlockEditor({ content, onChange, onImageInsert, token }, ref) {
     const [blocks, setBlocks] = useState<EditorBlock[]>(() => initBlocks(content));
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const [isDragOver, setIsDragOver] = useState<boolean>(false);
     const [uploadError, setUploadError] = useState<string>('');
-    const textareaRefs = useRef<Record<number, HTMLTextAreaElement | HTMLDivElement | null>>({});
+    const blockElements = useRef<Record<number, BlockElement | null>>({});
     const containerRef = useRef<HTMLDivElement>(null);
-    const isInternalChange = useRef<boolean>(false);
+    // 블록들이 지금 나타내는 마크다운. 부모가 내려준 content 가 이것과 다를 때만 블록을 다시 만든다.
+    const blocksContent = useRef<string>(content);
     const pendingCursorPos = useRef<number | null>(null);
 
-    // 외부 content 변경 시 blocks 동기화 (외부에서만)
     useEffect(() => {
-        if (isInternalChange.current) {
-            isInternalChange.current = false;
-            return;
-        }
+        if (content === blocksContent.current) return;
+        blocksContent.current = content;
         setBlocks(initBlocks(content));
     }, [content]);
 
-    // 활성 블록에 포커스 + 커서 위치 복원
     useEffect(() => {
-        if (activeIndex !== null && textareaRefs.current[activeIndex]) {
-            const el = textareaRefs.current[activeIndex]!;
-            el.focus();
-            if (el.tagName === 'TEXTAREA') {
-                const textarea = el as HTMLTextAreaElement;
-                if (pendingCursorPos.current !== null) {
-                    textarea.selectionStart = pendingCursorPos.current;
-                    textarea.selectionEnd = pendingCursorPos.current;
-                    pendingCursorPos.current = null;
-                }
-                autoResize(textarea);
+        if (activeIndex === null) return;
+        const el = blockElements.current[activeIndex];
+        if (!el) return;
+        el.focus();
+        if (el instanceof HTMLTextAreaElement) {
+            if (pendingCursorPos.current !== null) {
+                el.selectionStart = pendingCursorPos.current;
+                el.selectionEnd = pendingCursorPos.current;
+                pendingCursorPos.current = null;
             }
+            autoResize(el);
         }
     }, [activeIndex, blocks]);
 
-    // blocks -> raw markdown -> onChange
     const emitChange = useCallback((newBlocks: EditorBlock[]) => {
-        isInternalChange.current = true;
-        const raw = newBlocks.map(b => b.raw).join('\n\n');
+        const raw = newBlocks.map(b => b.raw).join(BLOCK_SEPARATOR);
+        blocksContent.current = raw;
         onChange(raw);
     }, [onChange]);
 
-    const handleImageResize = useCallback((index: number, widthValue: string | null) => {
+    const handleImageResize = useCallback((index: number, width: string | null) => {
         setBlocks(prev => {
+            const resizedRaw = withImageWidth(prev[index].raw, width);
+            if (resizedRaw === null) return prev;
             const newBlocks = [...prev];
-            const block = newBlocks[index];
-            const match = block.raw.match(/^(!\[([^\]]*)\]\(([^)]+)\))(?:\{width=[^}]+\})?$/);
-            if (!match) return prev;
-            const newRaw = widthValue ? `${match[1]}{width=${widthValue}}` : match[1];
-            newBlocks[index] = { ...block, raw: newRaw, width: widthValue };
+            newBlocks[index] = { ...prev[index], raw: resizedRaw };
             emitChange(newBlocks);
             return newBlocks;
         });
     }, [emitChange]);
-
-    const handleResizeMouseDown = useCallback((e: React.MouseEvent, index: number) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const wrapperEl = (e.currentTarget as HTMLElement).closest('.image-resize-wrapper') as HTMLElement | null;
-        if (wrapperEl) startImageDrag(e.clientX, index, wrapperEl, handleImageResize);
-    }, [handleImageResize]);
-
-    const handleResizeTouchStart = useCallback((e: React.TouchEvent, index: number) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const wrapperEl = (e.currentTarget as HTMLElement).closest('.image-resize-wrapper') as HTMLElement | null;
-        if (wrapperEl) startImageDrag(e.touches[0].clientX, index, wrapperEl, handleImageResize);
-    }, [handleImageResize]);
 
     const updateBlock = useCallback((index: number, newRaw: string) => {
         setBlocks(prev => {
@@ -162,215 +95,160 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         });
     }, [emitChange]);
 
-    // 선택 텍스트를 마크다운 문법으로 감싸기
     const wrapSelection = useCallback((before: string, after: string) => {
         if (activeIndex === null) return;
-        const ta = textareaRefs.current[activeIndex] as HTMLTextAreaElement | null;
-        if (!ta) return;
+        const ta = blockElements.current[activeIndex];
+        if (!(ta instanceof HTMLTextAreaElement)) return;
 
-        const start = ta.selectionStart;
-        const end = ta.selectionEnd;
-        const text = ta.value;
-        const selected = text.slice(start, end);
-        const newText = text.slice(0, start) + before + selected + after + text.slice(end);
-        updateBlock(activeIndex, newText);
+        const { selectionStart: start, selectionEnd: end, value: text } = ta;
+        updateBlock(activeIndex, text.slice(0, start) + before + text.slice(start, end) + after + text.slice(end));
 
-        // 커서 위치 복원
+        // 값이 바뀐 textarea 가 다시 그려진 뒤에 선택 영역을 감싼 글자 안쪽으로 옮긴다.
         requestAnimationFrame(() => {
             ta.focus();
-            if (selected) {
-                ta.selectionStart = start + before.length;
-                ta.selectionEnd = end + before.length;
-            } else {
-                ta.selectionStart = start + before.length;
-                ta.selectionEnd = start + before.length;
-            }
+            ta.selectionStart = start + before.length;
+            ta.selectionEnd = end + before.length;
         });
     }, [activeIndex, updateBlock]);
 
-    // 외부에서 호출 가능한 메서드 노출
     useImperativeHandle(ref, () => ({
         wrapSelection,
-        getActiveTextarea: () => activeIndex !== null ? textareaRefs.current[activeIndex] ?? null : null,
+        getActiveTextarea: () => activeIndex !== null ? blockElements.current[activeIndex] ?? null : null,
     }), [wrapSelection, activeIndex]);
 
-    // 블록 클릭 -> 활성화
-    const handleBlockClick = (index: number) => {
-        setActiveIndex(index);
-    };
-
-    // 빈 영역 클릭 -> 마지막 블록이 비어있으면 활성화, 아니면 새 블록 추가
-    const handleEmptyClick = () => {
+    // 비어 있는 마지막 블록이 있으면 그 블록을, 없으면 새 블록을 연다.
+    const handleEmptyAreaClick = () => {
         setBlocks(prev => {
             const lastBlock = prev[prev.length - 1];
             if (lastBlock && lastBlock.raw.trim() === '') {
                 setActiveIndex(prev.length - 1);
                 return prev;
             }
-            const newBlocks = [...prev, { raw: '', type: 'paragraph', id: genBlockId() }];
+            const newBlocks = [...prev, newBlock()];
             setActiveIndex(newBlocks.length - 1);
             emitChange(newBlocks);
             return newBlocks;
         });
     };
 
-    // 키보드 핸들러
+    const replaceBlocks = (makeNext: (prev: EditorBlock[]) => EditorBlock[], nextActive: number, cursorPos: number | null) => {
+        setBlocks(prev => {
+            const newBlocks = makeNext(prev);
+            pendingCursorPos.current = cursorPos;
+            setActiveIndex(nextActive);
+            emitChange(newBlocks);
+            return newBlocks;
+        });
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, index: number) => {
-        const ta = textareaRefs.current[index] as HTMLTextAreaElement | null;
+        const ta = e.currentTarget;
         const raw = blocks[index]?.raw || '';
-
-        // 코드 블록 감지
         const isCodeBlock = raw.trimStart().startsWith('```');
+        const cursorPos = ta.selectionStart;
+        const cursorAtStart = ta.selectionStart === 0 && ta.selectionEnd === 0;
 
-        // 포맷 단축키 (Ctrl/Cmd + key)
-        if (e.ctrlKey || e.metaKey) {
-            switch (e.key.toLowerCase()) {
-                case 'b':
-                    e.preventDefault();
-                    wrapSelection('**', '**');
-                    return;
-                case 'i':
-                    e.preventDefault();
-                    wrapSelection('*', '*');
-                    return;
-                case 'k':
-                    e.preventDefault();
-                    wrapSelection('[', '](url)');
-                    return;
-                case '`':
-                    e.preventDefault();
-                    wrapSelection('`', '`');
-                    return;
-            }
-        }
-
-        // 코드 블록에서 마지막 줄이 빈 줄일 때 Enter -> 코드 블록 탈출
-        if (e.key === 'Enter' && !e.shiftKey && isCodeBlock) {
-            const cursorPos = ta ? ta.selectionStart : raw.length;
-            const lines = raw.slice(0, cursorPos).split('\n');
-            const lastLine = lines[lines.length - 1];
-            // 커서가 맨 끝에 있고, 마지막 줄이 빈 줄이면 탈출
-            if (cursorPos === raw.length && lastLine.trim() === '' && lines.length > 1) {
-                e.preventDefault();
-                // 빈 마지막 줄 제거
-                const trimmedRaw = lines.slice(0, -1).join('\n');
-                setBlocks(prev => {
-                    const newBlocks = [...prev];
-                    newBlocks[index] = { ...newBlocks[index], raw: trimmedRaw };
-                    newBlocks.splice(index + 1, 0, { raw: '', type: 'paragraph', id: genBlockId() });
-                    pendingCursorPos.current = 0;
-                    setActiveIndex(index + 1);
-                    emitChange(newBlocks);
-                    return newBlocks;
-                });
-                return;
-            }
-        }
-
-        if (e.key === 'Enter' && !e.shiftKey && !isCodeBlock) {
+        const shortcut = (e.ctrlKey || e.metaKey) ? SHORTCUT_FORMATS[e.key.toLowerCase()] : undefined;
+        if (shortcut) {
             e.preventDefault();
-            const cursorPos = ta ? ta.selectionStart : raw.length;
-            const beforeCursor = raw.slice(0, cursorPos);
-            const afterCursor = raw.slice(cursorPos);
-            setBlocks(prev => {
-                const newBlocks = [...prev];
-                newBlocks[index] = { ...newBlocks[index], raw: beforeCursor };
-                newBlocks.splice(index + 1, 0, { raw: afterCursor, type: 'paragraph', id: genBlockId() });
-                pendingCursorPos.current = 0;
-                setActiveIndex(index + 1);
-                emitChange(newBlocks);
-                return newBlocks;
-            });
+            wrapSelection(...FORMAT_MARKS[shortcut]);
             return;
         }
 
-        // Backspace: 첫 번째 빈 블록 삭제
+        if (e.key === 'Enter' && !e.shiftKey && isCodeBlock) {
+            // 코드 블록은 Enter 가 줄바꿈이다. 끝에서 빈 줄에 한 번 더 누르면 그 빈 줄을 지우고 블록을 빠져나간다.
+            const lines = raw.slice(0, cursorPos).split('\n');
+            const onTrailingEmptyLine = cursorPos === raw.length && lines.length > 1 && lines[lines.length - 1].trim() === '';
+            if (!onTrailingEmptyLine) return;
+            e.preventDefault();
+            const codeWithoutEmptyLine = lines.slice(0, -1).join('\n');
+            replaceBlocks(prev => {
+                const next = [...prev];
+                next[index] = { ...next[index], raw: codeWithoutEmptyLine };
+                next.splice(index + 1, 0, newBlock());
+                return next;
+            }, index + 1, 0);
+            return;
+        }
+
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            replaceBlocks(prev => {
+                const next = [...prev];
+                next[index] = { ...next[index], raw: raw.slice(0, cursorPos) };
+                next.splice(index + 1, 0, newBlock(raw.slice(cursorPos)));
+                return next;
+            }, index + 1, 0);
+            return;
+        }
+
         if (e.key === 'Backspace' && raw === '' && index === 0 && blocks.length > 1) {
             e.preventDefault();
-            setBlocks(prev => {
-                const newBlocks = prev.filter((_, i) => i !== 0);
-                setActiveIndex(0);
-                emitChange(newBlocks);
-                return newBlocks;
-            });
+            replaceBlocks(prev => prev.slice(1), 0, null);
             return;
         }
 
-        // Backspace: 블록 시작에서 이전 블록과 병합 (빈 블록 삭제 포함)
-        if (e.key === 'Backspace' && ta && ta.selectionStart === 0 && ta.selectionEnd === 0 && index > 0) {
+        if (e.key === 'Backspace' && cursorAtStart && index > 0) {
             e.preventDefault();
-            setBlocks(prev => {
-                const newBlocks = [...prev];
-                const prevBlock = newBlocks[index - 1];
-                const currBlock = newBlocks[index];
-                const prevLen = prevBlock.raw.length;
-                newBlocks[index - 1] = { ...prevBlock, raw: prevBlock.raw + currBlock.raw };
-                newBlocks.splice(index, 1);
-                pendingCursorPos.current = prevLen;
-                setActiveIndex(index - 1);
-                emitChange(newBlocks);
-                return newBlocks;
-            });
+            const prevLength = blocks[index - 1].raw.length;
+            replaceBlocks(prev => {
+                const next = [...prev];
+                next[index - 1] = { ...prev[index - 1], raw: prev[index - 1].raw + prev[index].raw };
+                next.splice(index, 1);
+                return next;
+            }, index - 1, prevLength);
             return;
         }
 
-        // ArrowUp: 블록 시작에서 이전 블록으로
-        if (e.key === 'ArrowUp' && ta && ta.selectionStart === 0 && index > 0) {
+        if (e.key === 'ArrowUp' && ta.selectionStart === 0 && index > 0) {
             e.preventDefault();
             setActiveIndex(index - 1);
             return;
         }
 
-        // ArrowDown: 블록 끝에서 다음 블록으로
-        if (e.key === 'ArrowDown' && ta && ta.selectionStart === ta.value.length && index < blocks.length - 1) {
+        if (e.key === 'ArrowDown' && ta.selectionStart === ta.value.length && index < blocks.length - 1) {
             e.preventDefault();
             setActiveIndex(index + 1);
-            return;
         }
     };
 
-    // textarea 내용 변경
     const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>, index: number) => {
-        const newRaw = e.target.value;
-        updateBlock(index, newRaw);
+        updateBlock(index, e.target.value);
         autoResize(e.target);
     };
 
-    // 외부에서 이미지 삽입 시 호출할 함수 노출
-    const insertImage = useCallback((base64Data: string, fileName: string) => {
-        const markdownImage = `![${fileName}](${base64Data})`;
+    const deactivateOnBlur = (e: React.FocusEvent, index: number) => {
+        if (containerRef.current?.contains(e.relatedTarget as Node)) return;
+        setTimeout(() => {
+            setActiveIndex(prev => prev === index ? null : prev);
+        }, DEACTIVATE_DELAY_MS);
+    };
+
+    const insertImage = useCallback<InsertImage>((src, fileName) => {
         setBlocks(prev => {
             const insertAt = activeIndex !== null ? activeIndex + 1 : prev.length;
             const newBlocks = [...prev];
-            newBlocks.splice(insertAt, 0, {
-                raw: markdownImage,
-                type: 'image',
-                id: genBlockId(),
-                alt: fileName,
-                src: base64Data,
-            });
+            newBlocks.splice(insertAt, 0, newBlock(`![${fileName}](${src})`));
             setActiveIndex(null);
             emitChange(newBlocks);
             return newBlocks;
         });
     }, [activeIndex, emitChange]);
 
-    // onImageInsert 콜백에 insertImage 연결
     useEffect(() => {
         if (onImageInsert) {
             onImageInsert.current = insertImage;
         }
     }, [insertImage, onImageInsert]);
 
-    // 코드 블록 복사 버튼 이벤트 위임
     useCopyCodeBlock(containerRef);
 
-    // 드래그 앤 드롭 핸들러
     const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setIsDragOver(true);
     };
     const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+        // 자식 요소로 옮겨 갈 때도 dragleave 가 오므로, 편집기 밖으로 나갈 때만 끈다.
         if (!containerRef.current?.contains(e.relatedTarget as Node)) {
             setIsDragOver(false);
         }
@@ -379,7 +257,6 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
         e.preventDefault();
         setIsDragOver(false);
         const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-        if (files.length === 0) return;
 
         for (const file of files) {
             const validation = validateImageFile(file);
@@ -391,12 +268,10 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
                 setUploadError('');
                 const compressed = await compressImage(file);
                 if (token) {
-                    const url = await uploadImageToServer(compressed, token);
-                    insertImage(url, file.name);
+                    insertImage(await uploadImageToServer(compressed, token), file.name);
                 } else {
-                    // 토큰 없으면 Base64 폴백
                     const reader = new FileReader();
-                    reader.onload = (ev) => insertImage((ev.target as FileReader).result as string, file.name);
+                    reader.onload = () => insertImage(reader.result as string, file.name);
                     reader.readAsDataURL(compressed);
                 }
             } catch (err: unknown) {
@@ -422,96 +297,39 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
             )}
             {blocks.map((block, index) => {
                 const isActive = activeIndex === index;
-                const imgMatch = isActive
-                    ? block.raw.trim().match(/^!\[([^\]]*)\]\(([^)]+)\)(\{width=([^}]+)\})?$/)
-                    : null;
+                const activeImage = isActive ? parseImageLine(block.raw) : null;
+                const setElement = (el: BlockElement | null) => { blockElements.current[index] = el; };
                 return (
-                    <div key={block.id || index} className={`block-wrapper ${isActive ? 'active' : ''}`}>
-                        {imgMatch ? (
-                            <div
-                                ref={el => { textareaRefs.current[index] = el; }}
-                                tabIndex={0}
-                                className="block-image-editor"
-                                onBlur={(e) => {
-                                    if (containerRef.current && containerRef.current.contains(e.relatedTarget as Node)) return;
-                                    setTimeout(() => { setActiveIndex(prev => prev === index ? null : prev); }, 100);
-                                }}
-                            >
-                                <div
-                                    className="image-resize-wrapper"
-                                    style={imgMatch[4] ? { width: imgMatch[4] } : {}}
-                                >
-                                    <img
-                                        src={imgMatch[2]}
-                                        alt={imgMatch[1]}
-                                        draggable={false}
-                                    />
-                                    <div
-                                        className="image-resize-handle"
-                                        role="slider"
-                                        tabIndex={0}
-                                        aria-label="이미지 크기 조절"
-                                        aria-valuetext={imgMatch[4] || '원본'}
-                                        onMouseDown={(e) => handleResizeMouseDown(e, index)}
-                                        onTouchStart={(e) => handleResizeTouchStart(e, index)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                                                e.preventDefault();
-                                                const currentWidth = parseInt(imgMatch![4] || '100', 10);
-                                                const delta = e.key === 'ArrowRight' ? 5 : -5;
-                                                const newWidth = Math.max(10, Math.min(100, currentWidth + delta));
-                                                handleImageResize(index, `${newWidth}%`);
-                                            }
-                                        }}
-                                    />
-                                </div>
-                                <div className="image-resize-controls">
-                                    {SIZE_OPTIONS.map(opt => (
-                                        <button
-                                            key={opt.label}
-                                            className={`image-resize-btn ${(imgMatch[4] || null) === opt.value ? 'active' : ''}`}
-                                            onMouseDown={(e) => {
-                                                e.preventDefault();
-                                                handleImageResize(index, opt.value);
-                                            }}
-                                        >
-                                            {opt.label}
-                                        </button>
-                                    ))}
-                                    <span className="image-size-label">{imgMatch[4] || '원본'}</span>
-                                </div>
-                            </div>
+                    <div key={block.id} className={`block-wrapper ${isActive ? 'active' : ''}`}>
+                        {activeImage ? (
+                            <ImageBlockEditor
+                                image={activeImage}
+                                focusRef={setElement}
+                                onResize={(width) => handleImageResize(index, width)}
+                                onBlur={(e) => deactivateOnBlur(e, index)}
+                            />
                         ) : isActive ? (
                             <textarea
-                                ref={el => { textareaRefs.current[index] = el; }}
+                                ref={setElement}
                                 className="block-textarea"
                                 value={block.raw}
                                 onChange={(e) => handleInput(e, index)}
                                 onKeyDown={(e) => handleKeyDown(e, index)}
-                                onBlur={(e) => {
-                                    if (containerRef.current && containerRef.current.contains(e.relatedTarget as Node)) {
-                                        return;
-                                    }
-                                    setTimeout(() => {
-                                        setActiveIndex(prev => prev === index ? null : prev);
-                                    }, 100);
-                                }}
+                                onBlur={(e) => deactivateOnBlur(e, index)}
                                 placeholder="내용을 입력하세요..."
                                 rows={1}
                             />
                         ) : (
                             <div
                                 className="block-rendered md-body"
-                                onClick={() => handleBlockClick(index)}
-                                dangerouslySetInnerHTML={{
-                                    __html: renderBlockSafe(block)
-                                }}
+                                onClick={() => setActiveIndex(index)}
+                                dangerouslySetInnerHTML={{ __html: renderBlockHtml(block.raw) }}
                             />
                         )}
                     </div>
                 );
             })}
-            <div className="block-empty-area" onClick={handleEmptyClick}>
+            <div className="block-empty-area" onClick={handleEmptyAreaClick}>
                 {blocks.length === 0 && (
                     <span className="block-placeholder">여기를 클릭하여 글을 작성하세요...</span>
                 )}
@@ -522,36 +340,20 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
 
 export default BlockEditor;
 
-// 초기 블록 생성
 function initBlocks(content: string): EditorBlock[] {
-    if (!content || content.trim() === '') {
-        return [{ raw: '', type: 'paragraph', id: genBlockId() }];
-    }
-    const parsed = parseBlocks(content);
-    if (parsed.length === 0) {
-        return [{ raw: '', type: 'paragraph', id: genBlockId() }];
-    }
-    return parsed.map((b: Block) => ({ ...b, id: genBlockId() }));
+    const parsed = content.trim() ? parseBlocks(content) : [];
+    return parsed.length > 0 ? parsed.map(b => newBlock(b.raw)) : [newBlock()];
 }
 
-// 안전한 블록 렌더링 (빈 블록 처리 + XSS 방어)
-function renderBlockSafe(block: EditorBlock): string {
-    if (!block.raw || block.raw.trim() === '') {
+// renderBlock 은 renderMarkdown 과 달리 소독하지 않으므로 여기서 DOMPurify 를 거친다.
+function renderBlockHtml(raw: string): string {
+    if (raw.trim() === '') {
         return '<p class="block-empty-text">&nbsp;</p>';
     }
-    const parsed = parseBlocks(block.raw);
-    let html: string;
-    if (parsed.length > 0) {
-        html = parsed.map(renderBlock).join('\n');
-    } else {
-        html = renderBlock(block as unknown as Block);
-    }
-    return DOMPurify.sanitize(html);
+    return DOMPurify.sanitize(parseBlocks(raw).map(renderBlock).join('\n'));
 }
 
-// textarea 자동 높이 조절
 function autoResize(textarea: HTMLTextAreaElement): void {
-    if (!textarea) return;
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
 }

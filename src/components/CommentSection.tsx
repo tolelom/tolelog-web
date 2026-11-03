@@ -32,8 +32,7 @@ export default memo(function CommentSection({ postId }: CommentSectionProps) {
             }
         } catch (err: unknown) {
             if (err instanceof Error && err.name === 'AbortError') return;
-            // 사용자에게 빈 상태와 구분 가능한 명확한 실패 메시지 + 재시도 버튼 노출.
-            // toast 는 작성/삭제 같은 사용자 액션에만 쓰고, 페이지 진입 시 silent fetch 실패는 인라인으로.
+            // "댓글 없음"과 구분되도록 실패는 재시도 버튼과 함께 목록 자리에 보인다.
             setLoadError(err instanceof Error ? err.message : '댓글을 불러오지 못했습니다.');
         }
     }, [postId, token]);
@@ -58,7 +57,7 @@ export default memo(function CommentSection({ postId }: CommentSectionProps) {
             toast.success('댓글을 작성했습니다.');
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : '댓글 작성에 실패했습니다.';
-            setError(msg); // 인라인 에러로만 표시 (토스트 중복 방지)
+            setError(msg);
         } finally {
             setIsSubmitting(false);
         }
@@ -72,7 +71,7 @@ export default memo(function CommentSection({ postId }: CommentSectionProps) {
             toast.success('댓글을 삭제했습니다.');
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : '댓글 삭제에 실패했습니다.';
-            setError(msg); // 인라인 에러로만 표시 (토스트 중복 방지)
+            setError(msg);
         }
     };
 

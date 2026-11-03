@@ -65,6 +65,16 @@ describe('SeriesDetailPage', () => {
         expect(mockGetSeries).not.toHaveBeenCalled();
     });
 
+    it('토큰만 갱신되면 시리즈를 다시 부르지 않는다', async () => {
+        mockGetSeries.mockResolvedValue(ok(series()));
+        const { rerenderAuth } = renderPage(owner);
+        await screen.findByRole('heading', { name: 'C 언어 기초' });
+
+        rerenderAuth({ ...owner, token: 'refreshed' });
+        expect(screen.getByRole('heading', { name: 'C 언어 기초' })).toBeInTheDocument();
+        expect(mockGetSeries).toHaveBeenCalledTimes(1);
+    });
+
     it('작성자가 글을 내리면 바로 순서를 바꾸고 새 순서를 저장한다', async () => {
         mockGetSeries.mockResolvedValue(ok(series()));
         mockReorderPosts.mockResolvedValue({ status: 'success', data: null } as never);

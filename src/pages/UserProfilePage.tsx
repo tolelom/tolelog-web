@@ -7,10 +7,11 @@ import { resolveAssetUrl } from '../utils/assetUrl';
 import PageMeta from '../components/PageMeta';
 import { notify as toast } from '../utils/notify';
 import { User, PostListItem, Series } from '../types';
-import { parsePostListPage } from '../utils/postList';
+import { listSearchParams, parsePageParam, parsePostListPage } from '../utils/postList';
 import { splitTags } from '../utils/tags';
 import ProfileSeriesSection from '../components/profile/ProfileSeriesSection';
 import ProfilePostList from '../components/profile/ProfilePostList';
+import { useLatestRef } from '../hooks/useLatestRef';
 import './UserProfilePage.css';
 
 const PAGE_SIZE = 10;
@@ -25,8 +26,9 @@ function getMemberDays(createdAt: string | undefined): number {
 export default function UserProfilePage() {
     const { userId } = useParams<{ userId: string }>();
     const { userId: currentUserId, token, ready, setAvatarUrl: setGlobalAvatarUrl } = useContext(AuthContext);
+    const tokenRef = useLatestRef(token);
     const [searchParams, setSearchParams] = useSearchParams();
-    const page: number = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const page = parsePageParam(searchParams.get('page'));
     const tag: string = searchParams.get('tag') || '';
     const [profile, setProfile] = useState<User | null>(null);
     const [posts, setPosts] = useState<PostListItem[]>([]);
@@ -43,7 +45,7 @@ export default function UserProfilePage() {
 
     const isOwner = !!(currentUserId && String(currentUserId) === String(userId));
 
-    // 현재 보이는 글에서 태그 집계
+    // 전체 글이 아니라 지금 페이지에 보이는 글의 태그만 센다.
     const tagCloud = useMemo<[string, number][]>(() => {
         const counts: Record<string, number> = {};
         posts.forEach((post: PostListItem) => {
@@ -94,16 +96,11 @@ export default function UserProfilePage() {
     };
 
     const handlePrevPage = useCallback(() => {
-        const params: Record<string, string> = {};
-        if (tag) params.tag = tag;
-        if (page - 1 > 1) params.page = String(page - 1);
-        setSearchParams(params);
+        setSearchParams(listSearchParams(page - 1, { tag }));
     }, [page, tag, setSearchParams]);
 
     const handleNextPage = useCallback(() => {
-        const params: Record<string, string> = { page: String(page + 1) };
-        if (tag) params.tag = tag;
-        setSearchParams(params);
+        setSearchParams(listSearchParams(page + 1, { tag }));
     }, [page, tag, setSearchParams]);
 
     const handleTagClick = useCallback((clickedTag: string) => {
@@ -114,16 +111,18 @@ export default function UserProfilePage() {
         setSearchParams({});
     }, [setSearchParams]);
 
+    // 토큰이 갱신돼도 보는 사람이 같으면 다시 부르지 않는다.
     useEffect(() => {
         if (!ready) return;
         const controller = new AbortController();
         setLoading(true);
         setError(null);
+        const viewerToken = tokenRef.current;
 
         Promise.all([
             USER_API.getProfile(userId!, { signal: controller.signal }),
-            POST_API.getUserPosts(userId!, page, PAGE_SIZE, { signal: controller.signal, tag, token: token ?? undefined }),
-            SERIES_API.getUserSeries(userId!, { signal: controller.signal, token }),
+            POST_API.getUserPosts(userId!, page, PAGE_SIZE, { signal: controller.signal, tag, token: viewerToken ?? undefined }),
+            SERIES_API.getUserSeries(userId!, { signal: controller.signal, token: viewerToken }),
         ])
             .then(([profileRes, postsRes, seriesRes]) => {
                 if (profileRes.status === 'success') {
@@ -153,7 +152,7 @@ export default function UserProfilePage() {
             });
 
         return () => controller.abort();
-    }, [userId, page, tag, token, ready]);
+    }, [userId, page, tag, currentUserId, ready, tokenRef]);
 
     if (loading) {
         return (
@@ -264,7 +263,6 @@ export default function UserProfilePage() {
                 </div>
             )}
 
-            {/* 태그 클라우드 */}
             {tagCloud.length > 0 && !tag && (
                 <div className="profile-tag-cloud">
                     <h3 className="profile-tag-cloud-title">태그</h3>
@@ -283,7 +281,6 @@ export default function UserProfilePage() {
                 </div>
             )}
 
-            {/* 탭 */}
             <div className="profile-tabs">
                 <button
                     className={`profile-tab${activeTab === 'posts' ? ' profile-tab-active' : ''}`}
@@ -299,7 +296,6 @@ export default function UserProfilePage() {
                 </button>
             </div>
 
-            {/* 시리즈 탭 */}
             {activeTab === 'series' && (
                 <ProfileSeriesSection
                     seriesList={seriesList}
@@ -310,7 +306,6 @@ export default function UserProfilePage() {
                 />
             )}
 
-            {/* 글 탭 */}
             {activeTab === 'posts' && (
                 <ProfilePostList
                     posts={posts}

@@ -29,10 +29,8 @@ export default function ImageUploadButton({ onImageInsert }: ImageUploadButtonPr
                 return;
             }
 
-            // 이미지 압축
             const compressedFile = await compressImage(file);
 
-            // 서버에 업로드
             if (!token) {
                 setError('로그인이 필요합니다.');
                 setIsLoading(false);
@@ -49,7 +47,7 @@ export default function ImageUploadButton({ onImageInsert }: ImageUploadButtonPr
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : '이미지 업로드 중 오류가 발생했습니다.';
-            setError(message); // 인라인 에러로만 표시 (토스트 중복 방지)
+            setError(message);
             captureException(err, { source: 'ImageUploadButton' });
         } finally {
             setIsLoading(false);
