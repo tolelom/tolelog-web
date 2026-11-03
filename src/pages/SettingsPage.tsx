@@ -4,6 +4,8 @@ import { notify as toast } from '../utils/notify';
 import { AuthContext } from '../context/AuthContext';
 import { AUTH_API } from '../utils/api';
 import PageMeta from '../components/PageMeta';
+import { isPasswordTooLong, PASSWORD_TOO_LONG_MESSAGE } from '../components/authValidation';
+import { charCount, PASSWORD_MIN } from '../utils/limits';
 import './SettingsPage.css';
 
 export default function SettingsPage() {
@@ -24,8 +26,10 @@ export default function SettingsPage() {
         if (!currentPassword) errors.currentPassword = '현재 비밀번호를 입력해주세요';
         if (!newPassword) {
             errors.newPassword = '새 비밀번호를 입력해주세요';
-        } else if (newPassword.length < 6) {
-            errors.newPassword = '비밀번호는 6자 이상이어야 합니다';
+        } else if (charCount(newPassword) < PASSWORD_MIN) {
+            errors.newPassword = `비밀번호는 ${PASSWORD_MIN}자 이상이어야 합니다`;
+        } else if (isPasswordTooLong(newPassword)) {
+            errors.newPassword = PASSWORD_TOO_LONG_MESSAGE;
         }
         if (!confirmPassword) {
             errors.confirmPassword = '비밀번호 확인을 입력해주세요';
