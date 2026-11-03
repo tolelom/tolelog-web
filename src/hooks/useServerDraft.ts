@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { POST_API } from '../utils/api';
+import { POST_API } from '../lib/api';
 import type { ServerSaveOptions } from './useAutoSave';
 import type { PostFormData } from '../types';
 

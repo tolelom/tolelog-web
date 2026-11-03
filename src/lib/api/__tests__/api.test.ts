@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { notify } from '../notify';
-import { LIKE_API, AUTH_API } from '../api';
-import { STORAGE_KEYS } from '../constants';
+import { notify } from '../../../utils/notify';
+import { LIKE_API, AUTH_API } from '..';
+import { STORAGE_KEYS } from '../../../utils/constants';
 
 describe('request 401 handling', () => {
     const originalFetch = globalThis.fetch;
@@ -30,7 +30,7 @@ describe('request 401 handling', () => {
             Promise.resolve(new Response(null, { status: 401 }))
         ) as typeof fetch;
 
-        const { POST_API } = await import('../api');
+        const { POST_API } = await import('..');
         try {
             await POST_API.deletePost(1, 'stale-token');
         } catch {
@@ -235,7 +235,7 @@ describe('TAG_API.getTags', () => {
             data: { tags: [{ name: 'C', post_count: 11 }, { name: 'go', post_count: 1 }], total: 2 },
         }), { status: 200 }))) as typeof fetch;
 
-        const { TAG_API } = await import('../api');
+        const { TAG_API } = await import('..');
         const res = await TAG_API.getTags();
 
         expect(res.data).toEqual([{ name: 'C', count: 11 }, { name: 'go', count: 1 }]);

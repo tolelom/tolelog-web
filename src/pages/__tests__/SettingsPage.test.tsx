@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import SettingsPage from '../SettingsPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
-import { AUTH_API } from '../../utils/api';
+import { AUTH_API } from '../../lib/api';
 import { PASSWORD_TOO_LONG_MESSAGE } from '../../components/authValidation';
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     AUTH_API: { changePassword: vi.fn(), deleteAccount: vi.fn() },
 }));
 

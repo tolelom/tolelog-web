@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LIKE_API } from '../utils/api';
+import { LIKE_API } from '../lib/api';
 import { notify } from '../utils/notify';
 
 export function useLike(postId: string | undefined, token: string | null, initialLikeCount: number) {

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { Series } from '../types';
 import { useReturnFocus } from '../hooks/useReturnFocus';
 import { useModalKeyboard } from '../hooks/useModalKeyboard';
-import { SERIES_DESCRIPTION_MAX, SERIES_TITLE_MAX } from '../utils/limits';
+import { SERIES_DESCRIPTION_MAX, SERIES_TITLE_MAX } from '../lib/api/limits';
 import './SeriesFormModal.css';
 
 interface SeriesFormModalProps {

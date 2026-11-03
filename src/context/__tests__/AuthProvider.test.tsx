@@ -5,7 +5,7 @@ import { useContext } from 'react';
 import { AuthContext } from '../AuthContext';
 import { AuthProvider } from '../AuthProvider';
 import { STORAGE_KEYS } from '../../utils/constants';
-import { AUTH_TOKENS_EVENT } from '../../utils/api/client';
+import { AUTH_TOKENS_EVENT } from '../../lib/api/client';
 
 function TestConsumer() {
   const auth = useContext(AuthContext);

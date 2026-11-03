@@ -1,4 +1,4 @@
-import { AUTH_API } from '../utils/api';
+import { AUTH_API } from '../lib/api';
 import { useCompleteLogin } from '../hooks/useCompleteLogin';
 import AuthForm from './AuthForm';
 import { collectErrors, passwordError, usernameError } from './authValidation';

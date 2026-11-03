@@ -3,9 +3,9 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import CommentSection from '../CommentSection';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { makeComment } from '../../test-utils/fixtures';
-import { COMMENT_API } from '../../utils/api';
+import { COMMENT_API } from '../../lib/api';
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     COMMENT_API: {
         getComments: vi.fn(),
         createComment: vi.fn(),

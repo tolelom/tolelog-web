@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import UserProfilePage from '../UserProfilePage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
-import { USER_API, POST_API, SERIES_API } from '../../utils/api';
+import { USER_API, POST_API, SERIES_API } from '../../lib/api';
 import { compressImage, validateImageFile } from '../../utils/imageUpload';
 import type { PostListItem, Series } from '../../types';
 import { makePostListItem } from '../../test-utils/fixtures';
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     USER_API: { getProfile: vi.fn(), uploadAvatar: vi.fn() },
     POST_API: { getUserPosts: vi.fn() },
     SERIES_API: { getUserSeries: vi.fn(), deleteSeries: vi.fn() },

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { SERIES_API } from '../../utils/api';
+import { SERIES_API } from '../../lib/api';
 import SeriesFormModal from '../SeriesFormModal';
 import { notify as toast } from '../../utils/notify';
 import { Series } from '../../types';

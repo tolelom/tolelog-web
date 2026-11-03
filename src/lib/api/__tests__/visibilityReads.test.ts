@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { COMMENT_API, SERIES_API } from '../api';
+import { COMMENT_API, SERIES_API } from '..';
 
 // 비공개·draft 글의 댓글/시리즈는 서버가 작성자에게만 보여준다.
 // 작성자가 자기 글을 계속 보려면 이 읽기 요청들이 토큰을 실어 보내야 한다.
