@@ -16,7 +16,6 @@ export default function TagAutocompleteInput({ value, onChange }: TagAutocomplet
     const inputRef = useRef<HTMLInputElement | null>(null);
     const dropdownRef = useRef<HTMLDivElement | null>(null);
 
-    // 태그 목록 로드
     useEffect(() => {
         const controller = new AbortController();
         TAG_API.getTags({ signal: controller.signal })
@@ -78,7 +77,6 @@ export default function TagAutocompleteInput({ value, onChange }: TagAutocomplet
         }
     }, [showDropdown, tagSuggestions, activeIndex, handleSelect]);
 
-    // Close dropdown on outside click
     useEffect(() => {
         if (!showDropdown) return;
         const handleClick = (e: MouseEvent) => {

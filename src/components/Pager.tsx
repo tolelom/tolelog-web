@@ -4,7 +4,6 @@ interface PagerProps {
     hasMore: boolean;
     onPrev: () => void;
     onNext: () => void;
-    // 'pagination' 옆에 붙는 페이지별 클래스(home-pagination 등)
     className: string;
 }
 

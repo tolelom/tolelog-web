@@ -1,4 +1,4 @@
-// vite-react-ssg 의 Head 는 react-helmet-async 를 감싸면서 SSR 시 <head> 로 정확히 주입한다.
+// react-helmet-async 를 직접 쓰지 않고 vite-react-ssg 의 Head 를 써야 prerender 한 HTML 의 <head> 에 들어간다.
 import { Head as Helmet } from 'vite-react-ssg';
 import { useLocation } from 'react-router-dom';
 import { SITE_DESCRIPTION, SITE_NAME } from '../utils/constants';
@@ -7,21 +7,16 @@ import { absoluteSiteUrl } from '../utils/siteUrl';
 type OgType = 'website' | 'article' | 'profile';
 
 interface PageMetaProps {
-    /** 페이지별 제목. 비우면 사이트 이름만 사용. 채우면 `{title} | {SITE_NAME}` 형식. */
+    // 비우면 사이트 이름만 쓴다.
     title?: string;
-    /** description. 비우면 사이트 기본 사용. */
     description?: string;
-    /** canonical 경로(절대 또는 상대). 비우면 현재 location pathname 사용. */
+    // 비우면 지금 경로를 쓴다. 쿼리를 지운 대표 주소를 주려면 넘긴다.
     canonical?: string;
-    /** og:image 절대 URL. */
     ogImage?: string;
-    /** og:type — 게시글은 `article`, 그 외는 `website` 또는 `profile`. */
     ogType?: OgType;
-    /** true 면 robots noindex,nofollow. 비공개/임시 페이지에 사용. */
     noindex?: boolean;
-    /** 기본 `ko_KR`. */
     locale?: string;
-    /** og:type=article 일 때 추가 정보. */
+    // ogType 이 article 일 때만 쓴다.
     article?: {
         publishedTime?: string;
         modifiedTime?: string;

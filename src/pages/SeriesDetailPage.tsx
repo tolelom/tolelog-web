@@ -64,11 +64,10 @@ export default function SeriesDetailPage() {
         const targetIndex = direction === 'up' ? index - 1 : index + 1;
         if (targetIndex < 0 || targetIndex >= posts.length) return;
 
-        // Swap
         [posts[index], posts[targetIndex]] = [posts[targetIndex], posts[index]];
         const postIds = posts.map(p => p.id);
 
-        // Optimistic update
+        // 저장 응답을 기다리지 않고 먼저 바꾸고, 실패하면 서버 순서로 다시 불러온다.
         setSeries(prev => prev ? { ...prev, posts } : prev);
         setActionError('');
 

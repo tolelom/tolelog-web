@@ -45,7 +45,7 @@ export default function UserProfilePage() {
 
     const isOwner = !!(currentUserId && String(currentUserId) === String(userId));
 
-    // 현재 보이는 글에서 태그 집계
+    // 전체 글이 아니라 지금 페이지에 보이는 글의 태그만 센다.
     const tagCloud = useMemo<[string, number][]>(() => {
         const counts: Record<string, number> = {};
         posts.forEach((post: PostListItem) => {
@@ -263,7 +263,6 @@ export default function UserProfilePage() {
                 </div>
             )}
 
-            {/* 태그 클라우드 */}
             {tagCloud.length > 0 && !tag && (
                 <div className="profile-tag-cloud">
                     <h3 className="profile-tag-cloud-title">태그</h3>
@@ -282,7 +281,6 @@ export default function UserProfilePage() {
                 </div>
             )}
 
-            {/* 탭 */}
             <div className="profile-tabs">
                 <button
                     className={`profile-tab${activeTab === 'posts' ? ' profile-tab-active' : ''}`}
@@ -298,7 +296,6 @@ export default function UserProfilePage() {
                 </button>
             </div>
 
-            {/* 시리즈 탭 */}
             {activeTab === 'series' && (
                 <ProfileSeriesSection
                     seriesList={seriesList}
@@ -309,7 +306,6 @@ export default function UserProfilePage() {
                 />
             )}
 
-            {/* 글 탭 */}
             {activeTab === 'posts' && (
                 <ProfilePostList
                     posts={posts}

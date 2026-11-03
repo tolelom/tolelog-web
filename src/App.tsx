@@ -10,8 +10,7 @@ const DraftsPage = lazy(() => import('./pages/DraftsPage'));
 
 // 공개 라우트는 route.lazy 로 불러온다. Component 에 React.lazy 를 넘기면 vite-react-ssg 가 에셋을 모을 때
 // 이미 로드된 lazy 의 모듈 객체에 toString 을 불러 prerender 가 페이지 순서에 따라 실패한다.
-// Private 라우트는 element 에 JSX 로 직접 PrivateRoute 래핑.
-// SSG 단계에서 token=null 로 렌더되지만 이 라우트들은 ssgOptions.includedRoutes 에서 prerender 제외됨.
+// 로그인이 필요한 라우트는 vite.config 의 includedRoutes 에서 prerender 하지 않는다.
 export const routes: RouteRecord[] = [
     {
         path: '/',
