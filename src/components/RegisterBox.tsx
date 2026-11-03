@@ -3,8 +3,6 @@ import { useCompleteLogin } from '../hooks/useCompleteLogin';
 import AuthForm from './AuthForm';
 import { collectErrors, passwordError, usernameError } from './authValidation';
 
-const PASSWORD_MAX = 128;
-
 const REGISTER_FIELDS = [
     { name: 'username', label: '아이디', type: 'text', autoComplete: 'username' },
     { name: 'password', label: '비밀번호', type: 'password', autoComplete: 'new-password' },
@@ -14,7 +12,7 @@ const REGISTER_FIELDS = [
 function validateRegister(formData: Record<string, string>) {
     return collectErrors({
         username: usernameError(formData.username),
-        password: passwordError(formData.password, PASSWORD_MAX),
+        password: passwordError(formData.password, { checkMaxBytes: true }),
         confirmPassword: formData.password !== formData.confirmPassword ? '비밀번호가 일치하지 않습니다.' : null,
     });
 }
