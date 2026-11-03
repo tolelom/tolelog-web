@@ -91,4 +91,16 @@ describe('BlockEditor', () => {
         const { container } = render(<Harness content="" onChange={() => {}} />);
         expect(container.querySelector('.block-editor')).toBeTruthy();
     });
+
+    it('편집한 결과가 원래 내용과 같아도 이후 바깥에서 바꾼 내용(초안 복구 등)을 반영한다', () => {
+        const onChange = vi.fn();
+        const image = '![x](/a.png)';
+        const { container, rerender, getByRole } = render(<Harness content={image} onChange={onChange} />);
+        fireEvent.click(container.querySelector('.block-rendered') as HTMLElement);
+        fireEvent.mouseDown(getByRole('button', { name: '원본' }));
+        expect(onChange).toHaveBeenLastCalledWith(image);
+
+        rerender(<Harness content="# 복구한 제목" onChange={onChange} />);
+        expect(container.querySelector('textarea')).toHaveValue('# 복구한 제목');
+    });
 });

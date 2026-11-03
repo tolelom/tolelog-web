@@ -90,15 +90,13 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
     const [uploadError, setUploadError] = useState<string>('');
     const textareaRefs = useRef<Record<number, HTMLTextAreaElement | HTMLDivElement | null>>({});
     const containerRef = useRef<HTMLDivElement>(null);
-    const isInternalChange = useRef<boolean>(false);
+    const blocksContent = useRef<string>(content);
     const pendingCursorPos = useRef<number | null>(null);
 
     // 외부 content 변경 시 blocks 동기화 (외부에서만)
     useEffect(() => {
-        if (isInternalChange.current) {
-            isInternalChange.current = false;
-            return;
-        }
+        if (content === blocksContent.current) return;
+        blocksContent.current = content;
         setBlocks(initBlocks(content));
     }, [content]);
 
@@ -121,8 +119,8 @@ const BlockEditor = forwardRef<BlockEditorHandle, BlockEditorProps>(function Blo
 
     // blocks -> raw markdown -> onChange
     const emitChange = useCallback((newBlocks: EditorBlock[]) => {
-        isInternalChange.current = true;
         const raw = newBlocks.map(b => b.raw).join('\n\n');
+        blocksContent.current = raw;
         onChange(raw);
     }, [onChange]);
 
