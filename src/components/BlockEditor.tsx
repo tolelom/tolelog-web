@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
-import { parseBlocks, renderBlock } from '../utils/markdownParser';
+import { parseBlocks, renderBlock } from '../features/markdown';
 import { validateImageFile, compressImage, uploadImageToServer } from '../utils/imageUpload';
 import { useCopyCodeBlock } from '../hooks/useCopyCodeBlock';
 import DOMPurify from 'dompurify';
