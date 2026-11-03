@@ -84,3 +84,13 @@ npm run dev
 | `npm run test:coverage` | 커버리지 포함 테스트 |
 | `npm run lint` | ESLint |
 | `npm run type-check` | TypeScript 타입 검사 |
+| `npm run contract:sync` | tolelog-api 의 Swagger 를 가져와 API 타입을 다시 생성 |
+| `npm run contract:types` | `api-contract/swagger.json` 에서 `src/types/api.gen.ts` 생성 |
+| `npm run contract:check` | 생성된 타입이 스펙과 같은지 확인 |
+
+## API 계약
+
+API 요청·응답 타입의 원본은 tolelog-api 가 주석에서 생성하는 Swagger 2.0 문서(`docs/swagger.json`)다. 이 저장소는 그 사본을 `api-contract/swagger.json` 에 두고, 거기서 `src/types/api.gen.ts` 를 생성해 커밋한다(swagger2openapi → openapi-typescript). `src/types/index.ts` 의 API 타입은 생성된 타입의 별칭이다.
+
+- 백엔드 응답이 바뀌면 `npm run contract:sync` 를 실행한다. 형제 디렉터리 `../tolelog-api` 가 있으면 그 파일을, 없거나 `-- --remote` 를 주면 GitHub main 의 파일을 받는다. 바뀐 사본과 생성 파일을 함께 커밋한다.
+- 테스트(`scripts/__tests__/contract-types.test.ts`)가 생성 파일이 사본과 어긋나면 실패한다. 네트워크는 쓰지 않는다.
