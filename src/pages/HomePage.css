@@ -4,7 +4,6 @@
     padding: 40px 20px;
 }
 
-/* 로딩/에러/빈 상태 */
 .home-status {
     text-align: center;
     padding: 60px 0;
@@ -33,7 +32,6 @@
     color: var(--text-primary);
 }
 
-/* 검색 */
 .home-search {
     position: relative;
     margin-bottom: 24px;
@@ -71,7 +69,6 @@
     color: var(--text-primary);
 }
 
-/* 시리즈 섹션 */
 .home-series-section {
     margin-bottom: 32px;
 }
@@ -123,7 +120,6 @@
     border-radius: 10px;
 }
 
-/* ─── 미니 프로필 섹션 ─── */
 .home-profile {
     display: flex;
     align-items: center;
@@ -191,7 +187,6 @@
     color: var(--text-secondary);
 }
 
-/* ─── 인기 태그 가로 스크롤 ─── */
 .home-popular-tags {
     margin-bottom: 24px;
 }
@@ -258,7 +253,6 @@
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* 글 목록 */
 .home-post-list {
     text-align: left;
 }
@@ -360,13 +354,11 @@
     overflow: hidden;
 }
 
-/* 페이지네이션 */
 .home-pagination {
     padding-top: 28px;
     border-top: 1px solid var(--border-light);
 }
 
-/* 반응형 */
 @media (max-width: 768px) {
     .home-page {
         padding: 24px 16px;

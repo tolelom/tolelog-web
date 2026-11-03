@@ -16,7 +16,6 @@
     color: var(--text-primary);
 }
 
-/* 프로필 정보 */
 .profile-info {
     text-align: center;
     margin-bottom: 32px;
@@ -83,7 +82,6 @@
     margin: 0 0 16px 0;
 }
 
-/* 통계 */
 .profile-stats {
     display: flex;
     justify-content: center;
@@ -108,7 +106,6 @@
     color: var(--text-muted);
 }
 
-/* 태그 클라우드 */
 .profile-tag-cloud {
     margin-bottom: 32px;
     padding: 16px 20px;
@@ -142,7 +139,6 @@
     color: rgba(255, 255, 255, 0.7);
 }
 
-/* 탭 */
 .profile-tabs {
     display: flex;
     gap: 0;
@@ -193,7 +189,6 @@
     border-color: var(--accent-color);
 }
 
-/* 시리즈 목록 */
 .profile-series-section {
     text-align: left;
 }
@@ -240,7 +235,6 @@
     font-weight: 500;
 }
 
-/* 글 목록 */
 .profile-posts-section {
     text-align: left;
 }
@@ -358,7 +352,6 @@
     overflow: hidden;
 }
 
-/* 상태 표시 */
 .profile-status {
     text-align: center;
     padding: 60px 0;
@@ -370,13 +363,11 @@
     color: var(--error-text);
 }
 
-/* 페이지네이션 */
 .profile-pagination {
     padding-top: 24px;
     border-top: 1px solid var(--border-light);
 }
 
-/* 반응형 */
 @media (max-width: 768px) {
     .profile-page {
         padding: 24px 16px;
@@ -421,16 +412,13 @@
     }
 }
 
-/* ═══ 시리즈 관리 모드 ═══ */
 
-/* 시리즈 에러 메시지 */
 .profile-series-error {
     color: var(--error-text);
     font-size: 13px;
     margin-bottom: 12px;
 }
 
-/* 시리즈 탭 상단 헤더 (제목 + 새 시리즈 버튼) */
 .profile-series-header {
     display: flex;
     align-items: center;
@@ -438,14 +426,12 @@
     margin-bottom: 16px;
 }
 
-/* 새 시리즈 버튼 */
 .profile-series-create-btn {
     gap: 6px;
     font-size: 13px;
     font-weight: 600;
 }
 
-/* 카드 내 편집/삭제 버튼 그룹 */
 .profile-series-card-actions {
     display: flex;
     align-items: center;
@@ -459,7 +445,6 @@
     opacity: 1;
 }
 
-/* 편집 버튼 */
 .profile-series-edit-btn {
     background: none;
     border: none;
@@ -478,7 +463,6 @@
     background: var(--bg-secondary);
 }
 
-/* 삭제 버튼 */
 .profile-series-delete-btn {
     background: none;
     border: none;
@@ -497,7 +481,6 @@
     background: var(--bg-secondary);
 }
 
-/* 삭제 확인 인라인 메시지 */
 .profile-series-delete-confirm {
     display: flex;
     align-items: center;
@@ -531,7 +514,6 @@
     color: var(--text-primary) !important;
 }
 
-/* 반응형 — 시리즈 관리 */
 @media (max-width: 768px) {
     .profile-series-card-actions {
         opacity: 1;

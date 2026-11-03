@@ -7,7 +7,6 @@
     margin-bottom: 20px;
 }
 
-/* 블록 공통 */
 .block-wrapper {
     position: relative;
     border-radius: 4px;
@@ -22,7 +21,6 @@
     background-color: transparent;
 }
 
-/* 렌더링된 블록 */
 .block-rendered {
     cursor: text;
     padding: 4px 8px;
@@ -41,7 +39,6 @@
     min-height: 1.6em;
 }
 
-/* 활성 블록 textarea */
 .block-textarea {
     width: 100%;
     border: none;
@@ -64,7 +61,6 @@
     color: var(--text-muted);
 }
 
-/* 빈 영역 */
 .block-empty-area {
     min-height: 100px;
     cursor: text;
@@ -79,7 +75,7 @@
     padding: 4px 8px;
 }
 
-/* ─── 에디터용 마크다운 간격 오버라이드 (.md-body 기반, 더 촘촘한 간격) ─── */
+/* 편집 중에는 블록 사이 간격이 따로 있어 .md-body 의 여백을 줄인다 */
 .block-rendered h1, .block-rendered h2 { margin: 8px 0; }
 .block-rendered h1 { padding-bottom: 8px; }
 .block-rendered h3 { margin: 6px 0; }
@@ -99,7 +95,6 @@
 .block-rendered .footnotes { margin-top: 16px; }
 .block-rendered .math-block { margin: 8px 0; }
 
-/* 이미지 블록 에디터 */
 .block-image-editor {
     outline: none;
     border-radius: 4px;
@@ -180,7 +175,6 @@
     color: var(--text-muted);
 }
 
-/* 이미지 업로드 에러 */
 .block-upload-error {
     display: flex;
     align-items: center;
@@ -203,7 +197,6 @@
     line-height: 1;
 }
 
-/* 드래그 앤 드롭 */
 .block-editor.drag-over {
     border: 2px dashed var(--accent-color);
     background-color: var(--bg-hover);

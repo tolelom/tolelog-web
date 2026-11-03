@@ -1,4 +1,3 @@
-/* ─── CSS 변수: 라이트 모드 (기본) ─── */
 :root {
   --content-width: 800px;
   --bg-primary: #ffffff;
@@ -64,7 +63,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── highlight.js 라이트 모드 오버라이드 (atom-one-light) ─── */
+/* highlight.js 테마 CSS 는 atom-one-dark 하나뿐이라, 라이트 모드는 atom-one-light 색으로 덮고 두 모드 배경은 변수로 맞춘다 */
 :root .hljs {
   background: var(--code-block-bg);
   color: var(--code-block-text);
@@ -90,7 +89,6 @@
 :root .hljs-params { color: #383a42; }
 :root .hljs-meta { color: #4078f2; }
 
-/* ─── highlight.js 다크 모드 오버라이드 (atom-one-dark) ─── */
 [data-theme="dark"] .hljs {
   background: var(--code-block-bg);
   color: var(--code-block-text);
@@ -116,7 +114,6 @@
 [data-theme="dark"] .hljs-params { color: #abb2bf; }
 [data-theme="dark"] .hljs-meta { color: #61afef; }
 
-/* ─── CSS 변수: 다크 모드 (블랙) ─── */
 [data-theme="dark"] {
   --bg-primary: #000000;
   --bg-secondary: #111111;
@@ -208,13 +205,11 @@ button {
 button:hover {
   border-color: var(--accent-color);
 }
-/* ─── 전역 포커스 링 (키보드 접근성) ─── */
 *:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
 
-/* 입력 필드 포커스 — 전역 통일 */
 input:focus,
 textarea:focus,
 select:focus {
@@ -223,7 +218,6 @@ select:focus {
   box-shadow: 0 0 6px var(--focus-glow);
 }
 
-/* ─── 공용 버튼 ─── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -262,7 +256,6 @@ select:focus {
 }
 .btn-danger:hover:not(:disabled) { background: var(--btn-danger-hover); }
 
-/* ─── 공용 페이지네이션 ─── */
 .pagination {
   display: flex;
   justify-content: center;
@@ -296,7 +289,6 @@ select:focus {
   color: var(--text-secondary);
 }
 
-/* ─── 공통 애니메이션 ─── */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -322,7 +314,6 @@ select:focus {
   margin-bottom: 16px;
 }
 
-/* ─── 공통 태그 칩 ─── */
 .tag-chip {
   display: inline-block;
   padding: 4px 12px;
@@ -355,7 +346,6 @@ button.tag-chip-btn {
   border-color: var(--accent-color);
 }
 
-/* ─── 스켈레톤 로딩 ─── */
 @keyframes shimmer {
   0% { background-position: -400px 0; }
   100% { background-position: 400px 0; }
@@ -421,7 +411,6 @@ button.tag-chip-btn {
 .skeleton-no-pointer { pointer-events: none; }
 .skeleton-shrink-0 { flex-shrink: 0; }
 
-/* ─── 공통 마크다운 렌더링 (.md-body) ─── */
 .md-body { line-height: 1.8; color: var(--text-secondary); }
 
 .md-body h1, .md-body h2 { font-weight: 700; color: var(--text-primary); }
@@ -487,7 +476,6 @@ button.tag-chip-btn {
 
 .md-body hr { border: none; height: 1px; background-color: var(--border-color); }
 
-/* 체크리스트 */
 .md-body .markdown-checklist { list-style: none; padding-left: 8px; }
 .md-body .checklist-item {
   display: flex; align-items: flex-start; gap: 8px; color: var(--text-secondary);
@@ -496,24 +484,22 @@ button.tag-chip-btn {
   margin-top: 4px; accent-color: var(--accent-color); pointer-events: none;
 }
 
-/* 각주 */
 .md-body .footnotes { font-size: 13px; color: var(--text-muted); }
 .md-body .footnote-list { padding-left: 24px; }
 .md-body .footnote-item { margin: 4px 0; }
 .md-body .footnote-ref a { color: var(--accent-color); text-decoration: none; font-size: 12px; }
 .md-body .footnote-backref { color: var(--accent-color); text-decoration: none; margin-left: 4px; }
 
-/* 수식 */
 .md-body .math-block { text-align: center; overflow-x: auto; }
 
-/* KaTeX 로딩 중 임시 표시 — 로드 완료 시 자동 재렌더되어 사라짐 */
+/* KaTeX 가 로드되기 전 잠깐 보이는 수식 원문 */
 .md-body .math-pending {
     font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
     color: var(--text-muted);
     opacity: 0.6;
 }
 
-/* KaTeX 다크모드 색상 조정 — KaTeX는 currentColor를 쓰지만 일부 선/박스는 명시 색을 가짐 */
+/* KaTeX 는 대부분 currentColor 를 쓰지만 분수선·근호 등은 색을 직접 지정해 다크 모드에서 안 보인다 */
 [data-theme="dark"] .katex,
 [data-theme="dark"] .katex-display,
 [data-theme="dark"] .md-body .math-block,
@@ -530,7 +516,6 @@ button.tag-chip-btn {
   background-color: var(--text-primary);
 }
 
-/* 코드 블록 언어 레이블 */
 .md-body .code-lang-label {
   position: absolute; top: 10px; left: 14px;
   font-size: 11px; font-weight: 600; color: var(--text-muted);
@@ -539,7 +524,6 @@ button.tag-chip-btn {
 }
 .md-body .has-lang pre { padding-top: 36px; }
 
-/* 코드 블록 복사 버튼 */
 .md-body .code-block-wrapper { position: relative; }
 .md-body .code-copy-btn {
   position: absolute; top: 8px; right: 8px; padding: 4px 10px;
@@ -553,7 +537,6 @@ button.tag-chip-btn {
   background-color: var(--bg-hover); color: var(--text-primary);
 }
 
-/* ─── Page Loading Spinner (React.lazy Suspense fallback) ─── */
 .page-loading {
   display: flex;
   flex-direction: column;

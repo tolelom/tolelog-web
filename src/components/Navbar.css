@@ -1,4 +1,3 @@
-/* ─── Navbar ─── */
 .navbar {
   position: fixed;
   top: 0;
@@ -27,7 +26,6 @@
   padding: 0 24px;
 }
 
-/* ─── Logo ─── */
 .navbar-logo {
   font-size: 20px;
   font-weight: 700;
@@ -40,7 +38,6 @@
   opacity: 0.8;
 }
 
-/* ─── Right section ─── */
 .navbar-right {
   display: flex;
   align-items: center;
@@ -52,7 +49,6 @@
   align-items: center;
 }
 
-/* ─── Auth links (logged out) ─── */
 .navbar-link {
   font-size: 14px;
   font-weight: 500;
@@ -76,7 +72,6 @@
   background-color: var(--accent-hover);
 }
 
-/* ─── Write button (logged in) ─── */
 .navbar-write-btn {
   font-size: 14px;
   font-weight: 500;
@@ -93,7 +88,6 @@
   background-color: var(--bg-hover);
 }
 
-/* ─── Profile / Avatar ─── */
 .navbar-profile {
   position: relative;
 }
@@ -130,7 +124,6 @@
   line-height: 1;
 }
 
-/* ─── Dropdown menu ─── */
 .navbar-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -201,7 +194,6 @@
   margin: 4px 0;
 }
 
-/* ─── Responsive ─── */
 @media (max-width: 768px) {
   .navbar {
     height: 48px;
