@@ -4,7 +4,7 @@ import EditorPage from '../EditorPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { makePost } from '../../test-utils/fixtures';
 import { POST_API, SERIES_API, TAG_API } from '../../lib/api';
-import { AUTO_SAVE_DELAY_MS, STORAGE_KEYS } from '../../utils/constants';
+import { AUTO_SAVE_DELAY_MS, STORAGE_KEYS } from '../../lib/constants';
 import type { Post, SuccessResponse } from '../../types';
 
 const mockNavigate = vi.fn();

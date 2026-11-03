@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, act, fireEvent } from '@testing-library/react';
 import { ToastProvider } from '../ToastProvider';
 import { useToast } from '../../hooks/useToast';
-import { notify } from '../../utils/notify';
+import { notify } from '../../lib/notify';
 
 function Consumer() {
     const { toast, toasts } = useToast();

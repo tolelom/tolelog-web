@@ -1,5 +1,5 @@
-import { API_BASE_URL, STORAGE_KEYS } from '../../utils/constants';
-import { notify } from '../../utils/notify';
+import { API_BASE_URL, STORAGE_KEYS } from '../constants';
+import { notify } from '../notify';
 import type { SuccessResponse, AuthData } from '../../types';
 
 export interface ApiError extends Error {

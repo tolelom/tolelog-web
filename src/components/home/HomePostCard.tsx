@@ -1,7 +1,7 @@
 import type { KeyboardEvent, MouseEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import TagChip from '../TagChip';
-import { formatDate } from '../../utils/format';
+import { formatDate } from '../../lib/format';
 import { postPath } from '../../utils/slug';
 import { splitTags } from '../../utils/tags';
 import type { PostListItem } from '../../types';

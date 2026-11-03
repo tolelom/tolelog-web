@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { PostListItem } from '../../types';
-import { formatDate } from '../../utils/format';
+import { formatDate } from '../../lib/format';
 import { postPath } from '../../utils/slug';
 import Pager from '../Pager';
 import TagChip from '../TagChip';

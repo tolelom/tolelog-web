@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseBlocks, parseInline, renderBlock, slugifyHeading } from '../markdownParser';
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL } from '../../lib/constants';
 
 describe('slugifyHeading', () => {
   it('converts spaces to hyphens', () => {

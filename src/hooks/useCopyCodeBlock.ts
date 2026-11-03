@@ -1,5 +1,5 @@
 import { useEffect, RefObject } from 'react';
-import { decodeHtmlEntities } from '../utils/format';
+import { decodeHtmlEntities } from '../lib/format';
 
 export function useCopyCodeBlock(
     containerRef: RefObject<HTMLElement | null>,

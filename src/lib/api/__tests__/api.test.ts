@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { notify } from '../../../utils/notify';
+import { notify } from '../../notify';
 import { LIKE_API, AUTH_API } from '..';
-import { STORAGE_KEYS } from '../../../utils/constants';
+import { STORAGE_KEYS } from '../../constants';
 
 describe('request 401 handling', () => {
     const originalFetch = globalThis.fetch;

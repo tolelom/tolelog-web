@@ -1,6 +1,6 @@
 import { useState, useContext, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { notify as toast } from '../utils/notify';
+import { notify as toast } from '../lib/notify';
 import { AuthContext } from '../context/AuthContext';
 import { AUTH_API } from '../lib/api';
 import PageMeta from '../components/PageMeta';

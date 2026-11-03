@@ -7,7 +7,7 @@ import {
     type ToastType,
 } from './ToastContext';
 import { ToastContainer } from '../components/ToastContainer';
-import { notify } from '../utils/notify';
+import { notify } from '../lib/notify';
 
 const DURATIONS: Record<ToastType, number> = { success: 3000, info: 4000, error: 6000 };
 const MAX_STACK = 3;

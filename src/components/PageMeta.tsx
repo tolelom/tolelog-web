@@ -1,8 +1,8 @@
 // react-helmet-async 를 직접 쓰지 않고 vite-react-ssg 의 Head 를 써야 prerender 한 HTML 의 <head> 에 들어간다.
 import { Head as Helmet } from 'vite-react-ssg';
 import { useLocation } from 'react-router-dom';
-import { SITE_DESCRIPTION, SITE_NAME } from '../utils/constants';
-import { absoluteSiteUrl } from '../utils/siteUrl';
+import { SITE_DESCRIPTION, SITE_NAME } from '../lib/constants';
+import { absoluteSiteUrl } from '../lib/siteUrl';
 
 type OgType = 'website' | 'article' | 'profile';
 

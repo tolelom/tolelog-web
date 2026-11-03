@@ -5,7 +5,7 @@ import { escapeHtml, slugifyHeading } from './text';
 import { parseInlineWithRefs } from './inline';
 import { parseBlocks } from './blocks';
 import { renderKatex } from './katex';
-import { resolveContentImageUrl } from '../assetUrl';
+import { resolveContentImageUrl } from '../../lib/assetUrl';
 
 function renderBlockWithRefs(block: Block, refs: Set<string>): string {
     const inline = (text: string) => parseInlineWithRefs(text, refs);
