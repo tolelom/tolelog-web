@@ -25,9 +25,14 @@ interface EditorRef {
 
 const EMPTY_FORM: PostFormData = { title: '', content: '', is_public: true, tags: '' };
 
+// 편집 대상 글이 바뀌면(새 글 ↔ 글 수정) 이전 글의 입력·임시저장 상태를 버리도록 새로 마운트한다.
 export default function EditorPage() {
-    const navigate = useNavigate();
     const { postId } = useParams<{ postId: string }>();
+    return <PostEditor key={postId ?? 'new'} postId={postId} />;
+}
+
+function PostEditor({ postId }: { postId: string | undefined }) {
+    const navigate = useNavigate();
     const { token, userId } = useContext(AuthContext);
     const { toast } = useToast();
     const imageInsertRef = useRef<((base64Data: string, fileName: string) => void) | null>(null);
