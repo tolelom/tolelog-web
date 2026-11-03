@@ -11,7 +11,7 @@ function resolveInitialTheme(): Theme {
     try {
         const saved = localStorage.getItem(STORAGE_KEYS.THEME);
         if (saved === 'dark' || saved === 'light') return saved;
-    } catch { /* ignore */ }
+    } catch { /* 저장소를 못 쓰는 환경이면 시스템 설정을 따른다 */ }
     return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
@@ -31,7 +31,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     useEffect(() => {
         if (!isBrowser || !resolved) return;
         document.documentElement.setAttribute('data-theme', theme);
-        try { localStorage.setItem(STORAGE_KEYS.THEME, theme); } catch { /* ignore */ }
+        try { localStorage.setItem(STORAGE_KEYS.THEME, theme); } catch { /* 저장하지 못해도 이번 방문에는 적용된다 */ }
     }, [theme, resolved]);
 
     const toggleTheme = useCallback(() => {
