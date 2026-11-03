@@ -1,4 +1,4 @@
-import { charCount, PASSWORD_MAX_BYTES, PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN, utf8ByteLength } from '../lib/api/limits';
+import { charCount, PASSWORD_MAX_BYTES, PASSWORD_MIN, USERNAME_MAX, USERNAME_MIN, utf8ByteLength } from '../../lib/api/limits';
 
 export type FormErrors = Record<string, string>;
 

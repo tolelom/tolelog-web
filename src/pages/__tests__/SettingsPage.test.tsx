@@ -3,7 +3,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import SettingsPage from '../SettingsPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { AUTH_API } from '../../lib/api';
-import { PASSWORD_TOO_LONG_MESSAGE } from '../../components/authValidation';
+import { PASSWORD_TOO_LONG_MESSAGE } from '../../features/auth/validation';
 
 vi.mock('../../lib/api', () => ({
     AUTH_API: { changePassword: vi.fn(), deleteAccount: vi.fn() },

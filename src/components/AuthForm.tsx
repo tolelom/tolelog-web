@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import type { FormErrors } from './authValidation';
+import type { FormErrors } from '../features/auth/validation';
 import './AuthForm.css';
 
 interface AuthFormField {

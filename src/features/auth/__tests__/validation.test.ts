@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { collectErrors, PASSWORD_TOO_LONG_MESSAGE, passwordError, usernameError } from '../authValidation';
+import { collectErrors, PASSWORD_TOO_LONG_MESSAGE, passwordError, usernameError } from '../validation';
 
 describe('authValidation', () => {
     it('아이디 규칙을 앞에서부터 하나만 알린다', () => {

@@ -1,7 +1,7 @@
 import { AUTH_API } from '../lib/api';
 import { useCompleteLogin } from '../hooks/useCompleteLogin';
 import AuthForm from './AuthForm';
-import { collectErrors, passwordError, usernameError } from './authValidation';
+import { collectErrors, passwordError, usernameError } from '../features/auth/validation';
 
 const REGISTER_FIELDS = [
     { name: 'username', label: '아이디', type: 'text', autoComplete: 'username' },
