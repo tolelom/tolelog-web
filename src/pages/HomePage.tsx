@@ -9,7 +9,7 @@ import { PostListItem, Series, User, TagInfo } from '../types';
 import PageMeta from '../components/PageMeta';
 import Pager from '../components/Pager';
 import HomePostCard from '../components/home/HomePostCard';
-import { listSearchParams, parsePageParam, parsePostListPage } from '../utils/postList';
+import { listSearchParams, parsePageParam, parsePostListPage } from '../features/posts/list';
 import { BlogJsonLd } from '../components/StructuredData';
 import { useLatestRef } from '../hooks/useLatestRef';
 import './HomePage.css';

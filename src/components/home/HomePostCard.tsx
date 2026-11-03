@@ -2,8 +2,8 @@ import type { KeyboardEvent, MouseEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import TagChip from '../TagChip';
 import { formatDate } from '../../lib/format';
-import { postPath } from '../../utils/slug';
-import { splitTags } from '../../utils/tags';
+import { postPath } from '../../features/posts/slug';
+import { splitTags } from '../../features/posts/tags';
 import type { PostListItem } from '../../types';
 
 interface HomePostCardProps {

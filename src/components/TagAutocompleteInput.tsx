@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, ChangeEvent } from 'react';
 import { TAG_API } from '../lib/api';
 import { TagInfo } from '../types';
-import { splitTags } from '../utils/tags';
+import { splitTags } from '../features/posts/tags';
 
 interface TagAutocompleteInputProps {
     value: string;

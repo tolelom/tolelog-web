@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parsePageParam } from '../postList';
+import { parsePageParam } from '../list';
 
 describe('parsePageParam', () => {
     it('읽을 수 있는 페이지 번호는 그대로 쓴다', () => {

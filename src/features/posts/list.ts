@@ -1,4 +1,4 @@
-import type { PostListItem, Pagination, PostListWithPagination } from '../types';
+import type { PostListItem, Pagination, PostListWithPagination } from '../../types';
 
 export interface PostListPage {
     posts: PostListItem[];

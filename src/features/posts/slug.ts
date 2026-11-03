@@ -1,4 +1,4 @@
-// 백엔드 internal/utils/slug.go 의 Slugify 와 같아야 한다. 어긋나면 sitemap(prerender) 주소와
+// 백엔드 internal/permalink/slug.go 의 Slugify 와 같아야 한다. 어긋나면 sitemap(prerender) 주소와
 // 화면이 만드는 주소가 달라 canonical 이 어긋난다.
 
 const SLUG_MAX_RUNES = 60;

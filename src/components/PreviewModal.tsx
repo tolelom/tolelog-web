@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { renderMarkdown } from '../features/markdown';
 import { useCopyCodeBlock } from '../hooks/useCopyCodeBlock';
-import { splitTags } from '../utils/tags';
+import { splitTags } from '../features/posts/tags';
 
 interface PreviewModalProps {
     title: string;

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { postPath } from '../../utils/slug';
+import { postPath } from '../../features/posts/slug';
 import type { SeriesDetail, SeriesNav } from '../../types';
 
 interface SeriesNavigationProps {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { postLimitError } from '../postValidation';
+import { postLimitError } from '../validation';
 
 const valid = { title: '제목', content: '본문', tags: 'go,react' };
 
