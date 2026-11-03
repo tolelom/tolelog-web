@@ -7,7 +7,7 @@ import { resolveAssetUrl } from '../utils/assetUrl';
 import PageMeta from '../components/PageMeta';
 import { notify as toast } from '../utils/notify';
 import { User, PostListItem, Series } from '../types';
-import { parsePageParam, parsePostListPage } from '../utils/postList';
+import { listSearchParams, parsePageParam, parsePostListPage } from '../utils/postList';
 import { splitTags } from '../utils/tags';
 import ProfileSeriesSection from '../components/profile/ProfileSeriesSection';
 import ProfilePostList from '../components/profile/ProfilePostList';
@@ -96,16 +96,11 @@ export default function UserProfilePage() {
     };
 
     const handlePrevPage = useCallback(() => {
-        const params: Record<string, string> = {};
-        if (tag) params.tag = tag;
-        if (page - 1 > 1) params.page = String(page - 1);
-        setSearchParams(params);
+        setSearchParams(listSearchParams(page - 1, { tag }));
     }, [page, tag, setSearchParams]);
 
     const handleNextPage = useCallback(() => {
-        const params: Record<string, string> = { page: String(page + 1) };
-        if (tag) params.tag = tag;
-        setSearchParams(params);
+        setSearchParams(listSearchParams(page + 1, { tag }));
     }, [page, tag, setSearchParams]);
 
     const handleTagClick = useCallback((clickedTag: string) => {
