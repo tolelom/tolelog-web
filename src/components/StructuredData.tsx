@@ -1,12 +1,7 @@
 // SSR 시 <head> 로 정확히 주입되도록 vite-react-ssg 의 Head 사용 (내부적으로 react-helmet-async)
 import { Head as Helmet } from 'vite-react-ssg';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '../utils/constants';
-
-function absoluteUrl(pathOrUrl: string): string {
-    if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
-    const normalizedPath = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
-    return `${SITE_URL}${normalizedPath}`;
-}
+import { absoluteSiteUrl } from '../utils/siteUrl';
 
 function jsonLd(data: object): string {
     // 스크립트 종료 태그가 본문에 끼어드는 XSS 회피
@@ -41,8 +36,8 @@ export function ArticleJsonLd({
         '@type': 'BlogPosting',
         headline: title,
         description,
-        url: absoluteUrl(url),
-        mainEntityOfPage: { '@type': 'WebPage', '@id': absoluteUrl(url) },
+        url: absoluteSiteUrl(url),
+        mainEntityOfPage: { '@type': 'WebPage', '@id': absoluteSiteUrl(url) },
         author: { '@type': 'Person', name: authorName },
         publisher: {
             '@type': 'Organization',
@@ -51,7 +46,7 @@ export function ArticleJsonLd({
         },
         datePublished,
         dateModified: dateModified ?? datePublished,
-        ...(image ? { image: absoluteUrl(image) } : {}),
+        ...(image ? { image: absoluteSiteUrl(image) } : {}),
         ...(tags && tags.length > 0 ? { keywords: tags.join(', ') } : {}),
     };
 
@@ -112,7 +107,7 @@ export function BreadcrumbJsonLd({ items }: BreadcrumbJsonLdProps) {
             '@type': 'ListItem',
             position: idx + 1,
             name: item.name,
-            item: absoluteUrl(item.url),
+            item: absoluteSiteUrl(item.url),
         })),
     };
 
