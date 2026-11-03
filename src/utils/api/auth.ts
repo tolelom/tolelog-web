@@ -1,5 +1,5 @@
 import { clearStoredSession, request } from './client';
-import type { SuccessResponse, AuthData, User } from '../../types';
+import type { SuccessResponse, AuthData, AvatarUpload, User } from '../../types';
 
 export const AUTH_API = {
     login: async (username: string, password: string): Promise<SuccessResponse<AuthData>> => {
@@ -39,7 +39,7 @@ export const USER_API = {
         return request(`/api/v1/users/${userId}`, { signal, errorMessage: '사용자 프로필을 불러오지 못했습니다' });
     },
 
-    uploadAvatar: async (file: File, token: string): Promise<SuccessResponse<{ avatar_url: string }>> => {
+    uploadAvatar: async (file: File, token: string): Promise<SuccessResponse<AvatarUpload>> => {
         const formData = new FormData();
         formData.append('avatar', file);
         return request('/api/v1/users/avatar', { method: 'PUT', auth: 'required', token, formData, errorMessage: '프로필 이미지 업로드 실패' });

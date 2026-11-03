@@ -1,5 +1,5 @@
 import { request } from './client';
-import type { SuccessResponse, Series, SeriesDetail, SeriesNav } from '../../types';
+import type { SuccessResponse, MessageData, Series, SeriesDetail, SeriesNav } from '../../types';
 
 export const SERIES_API = {
     getSeries: async (seriesId: number | string, { signal, token }: { signal?: AbortSignal; token?: string } = {}): Promise<SuccessResponse<SeriesDetail>> => {
@@ -15,16 +15,16 @@ export const SERIES_API = {
     updateSeries: async (seriesId: number | string, title: string, description: string, token: string): Promise<SuccessResponse<Series>> => {
         return request(`/api/v1/series/${seriesId}`, { method: 'PUT', auth: 'required', token, json: { title, description } });
     },
-    deleteSeries: async (seriesId: number | string, token: string): Promise<SuccessResponse<null>> => {
+    deleteSeries: async (seriesId: number | string, token: string): Promise<SuccessResponse<MessageData>> => {
         return request(`/api/v1/series/${seriesId}`, { method: 'DELETE', auth: 'required', token });
     },
-    addPost: async (seriesId: number | string, postId: number, order: number, token: string): Promise<SuccessResponse<null>> => {
+    addPost: async (seriesId: number | string, postId: number, order: number, token: string): Promise<SuccessResponse<MessageData>> => {
         return request(`/api/v1/series/${seriesId}/posts`, { method: 'POST', auth: 'required', token, json: { post_id: postId, order } });
     },
-    removePost: async (seriesId: number | string, postId: number, token: string): Promise<SuccessResponse<null>> => {
+    removePost: async (seriesId: number | string, postId: number, token: string): Promise<SuccessResponse<MessageData>> => {
         return request(`/api/v1/series/${seriesId}/posts/${postId}`, { method: 'DELETE', auth: 'required', token });
     },
-    reorderPosts: async (seriesId: number | string, postIds: number[], token: string): Promise<SuccessResponse<null>> => {
+    reorderPosts: async (seriesId: number | string, postIds: number[], token: string): Promise<SuccessResponse<MessageData>> => {
         return request(`/api/v1/series/${seriesId}/reorder`, { method: 'PUT', auth: 'required', token, json: { post_ids: postIds } });
     },
     getSeriesNav: async (postId: number | string, { signal, token }: { signal?: AbortSignal; token?: string } = {}): Promise<SuccessResponse<SeriesNav | null>> => {

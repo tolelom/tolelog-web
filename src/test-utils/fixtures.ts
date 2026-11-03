@@ -1,4 +1,4 @@
-import type { Post, Comment } from '../types';
+import type { Post, PostListItem, Comment } from '../types';
 import type { AuthContextType } from '../context/AuthContext';
 
 export function makePost(overrides: Partial<Post> = {}): Post {
@@ -9,6 +9,25 @@ export function makePost(overrides: Partial<Post> = {}): Post {
         user_id: 1,
         author: 'testuser',
         is_public: true,
+        status: 'published',
+        tags: '',
+        view_count: 0,
+        like_count: 0,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+        ...overrides,
+    };
+}
+
+export function makePostListItem(overrides: Partial<PostListItem> = {}): PostListItem {
+    return {
+        id: 1,
+        title: '첫 글',
+        excerpt: '',
+        user_id: 1,
+        author: 'tolelom',
+        is_public: true,
+        status: 'published',
         tags: '',
         view_count: 0,
         like_count: 0,
@@ -26,7 +45,11 @@ export function makeComment(overrides: Partial<Comment> = {}): Comment {
         author: 'testuser',
         avatar_url: '',
         content: 'nice',
+        parent_id: null,
+        is_edited: false,
         created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+        replies: [],
         ...overrides,
     };
 }

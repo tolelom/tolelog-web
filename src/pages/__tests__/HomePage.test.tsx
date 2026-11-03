@@ -5,6 +5,7 @@ import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { POST_API, SERIES_API, TAG_API, USER_API } from '../../utils/api';
 import { clearCache } from '../../utils/apiCache';
 import type { PostListItem } from '../../types';
+import { makePostListItem } from '../../test-utils/fixtures';
 
 vi.mock('../../utils/api', () => ({
     POST_API: { getPublicPosts: vi.fn(), searchPosts: vi.fn() },
@@ -23,21 +24,7 @@ const mockGetUserSeries = vi.mocked(SERIES_API.getUserSeries);
 const mockGetTags = vi.mocked(TAG_API.getTags);
 const mockGetProfile = vi.mocked(USER_API.getProfile);
 
-function item(overrides: Partial<PostListItem> = {}): PostListItem {
-    return {
-        id: 1,
-        title: '첫 글',
-        user_id: 1,
-        author: 'tolelom',
-        is_public: true,
-        tags: '',
-        view_count: 0,
-        like_count: 0,
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
-        ...overrides,
-    };
-}
+const item = makePostListItem;
 
 function listResponse(posts: PostListItem[], page = 1, totalPages = 1) {
     return {
