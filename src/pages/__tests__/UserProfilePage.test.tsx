@@ -92,6 +92,15 @@ describe('UserProfilePage', () => {
         expect(screen.queryByRole('button', { name: '+ 새 시리즈' })).not.toBeInTheDocument();
     });
 
+    it('토큰만 갱신되면 프로필을 다시 부르지 않는다', async () => {
+        const { rerenderAuth } = renderProfile({ userId: 1, token: 'old' });
+        await screen.findByRole('heading', { name: 'tolelom', level: 1 });
+
+        rerenderAuth({ userId: 1, token: 'refreshed' });
+        expect(screen.getByRole('heading', { name: 'tolelom', level: 1 })).toBeInTheDocument();
+        expect(mockGetUserPosts).toHaveBeenCalledTimes(1);
+    });
+
     it('로그인 상태를 읽기 전에는 불러오지 않는다', () => {
         renderProfile({ ready: false });
         expect(mockGetProfile).not.toHaveBeenCalled();

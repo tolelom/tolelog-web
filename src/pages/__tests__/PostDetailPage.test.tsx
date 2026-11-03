@@ -130,4 +130,18 @@ describe('PostDetailPage', () => {
         fireEvent.click(await screen.findByRole('button', { name: '기초' }));
         expect(await screen.findByText(`홈 ?tag=${encodeURIComponent('기초')}`)).toBeInTheDocument();
     });
+
+    it('토큰만 갱신되면 글을 다시 부르지 않고, 다른 사용자로 바뀌면 다시 부른다', async () => {
+        mockGetPost.mockResolvedValue({ status: 'success', data: makePost({ title: '긴 글' }) });
+        const { rerenderAuth } = renderWithProviders(<PostDetailPage />, { authValue: { token: 'old', userId: 7 } });
+        await screen.findByRole('heading', { name: '긴 글' });
+
+        rerenderAuth({ token: 'refreshed', userId: 7 });
+        expect(screen.getByRole('heading', { name: '긴 글' })).toBeInTheDocument();
+        expect(mockGetPost).toHaveBeenCalledTimes(1);
+
+        rerenderAuth({ token: null, userId: null });
+        await waitFor(() => expect(mockGetPost).toHaveBeenCalledTimes(2));
+    });
 });
+

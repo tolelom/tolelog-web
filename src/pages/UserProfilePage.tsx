@@ -11,6 +11,7 @@ import { parsePostListPage } from '../utils/postList';
 import { splitTags } from '../utils/tags';
 import ProfileSeriesSection from '../components/profile/ProfileSeriesSection';
 import ProfilePostList from '../components/profile/ProfilePostList';
+import { useLatestRef } from '../hooks/useLatestRef';
 import './UserProfilePage.css';
 
 const PAGE_SIZE = 10;
@@ -25,6 +26,7 @@ function getMemberDays(createdAt: string | undefined): number {
 export default function UserProfilePage() {
     const { userId } = useParams<{ userId: string }>();
     const { userId: currentUserId, token, ready, setAvatarUrl: setGlobalAvatarUrl } = useContext(AuthContext);
+    const tokenRef = useLatestRef(token);
     const [searchParams, setSearchParams] = useSearchParams();
     const page: number = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const tag: string = searchParams.get('tag') || '';
@@ -114,16 +116,18 @@ export default function UserProfilePage() {
         setSearchParams({});
     }, [setSearchParams]);
 
+    // 토큰이 갱신돼도 보는 사람이 같으면 다시 부르지 않는다.
     useEffect(() => {
         if (!ready) return;
         const controller = new AbortController();
         setLoading(true);
         setError(null);
+        const viewerToken = tokenRef.current;
 
         Promise.all([
             USER_API.getProfile(userId!, { signal: controller.signal }),
-            POST_API.getUserPosts(userId!, page, PAGE_SIZE, { signal: controller.signal, tag, token: token ?? undefined }),
-            SERIES_API.getUserSeries(userId!, { signal: controller.signal, token }),
+            POST_API.getUserPosts(userId!, page, PAGE_SIZE, { signal: controller.signal, tag, token: viewerToken ?? undefined }),
+            SERIES_API.getUserSeries(userId!, { signal: controller.signal, token: viewerToken }),
         ])
             .then(([profileRes, postsRes, seriesRes]) => {
                 if (profileRes.status === 'success') {
@@ -153,7 +157,7 @@ export default function UserProfilePage() {
             });
 
         return () => controller.abort();
-    }, [userId, page, tag, token, ready]);
+    }, [userId, page, tag, currentUserId, ready, tokenRef]);
 
     if (loading) {
         return (

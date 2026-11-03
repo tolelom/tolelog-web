@@ -7,11 +7,13 @@ import { SeriesDetail } from '../types';
 import PageMeta from '../components/PageMeta';
 import { BreadcrumbJsonLd } from '../components/StructuredData';
 import { postPath } from '../utils/slug';
+import { useLatestRef } from '../hooks/useLatestRef';
 import './SeriesDetailPage.css';
 
 export default function SeriesDetailPage() {
     const { seriesId } = useParams<{ seriesId: string }>();
     const { userId, token, ready } = useContext(AuthContext);
+    const tokenRef = useLatestRef(token);
     const [series, setSeries] = useState<SeriesDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
@@ -23,7 +25,7 @@ export default function SeriesDetailPage() {
         if (!seriesId) return;
         try {
             setIsLoading(true);
-            const response = await SERIES_API.getSeries(seriesId, { signal, token: token ?? undefined });
+            const response = await SERIES_API.getSeries(seriesId, { signal, token: tokenRef.current ?? undefined });
             if (response.status === 'success') {
                 setSeries(response.data);
             } else {
@@ -35,14 +37,15 @@ export default function SeriesDetailPage() {
         } finally {
             setIsLoading(false);
         }
-    }, [seriesId, token]);
+    }, [seriesId, tokenRef]);
 
+    // 토큰이 갱신돼도 보는 사람이 같으면 다시 부르지 않는다.
     useEffect(() => {
         if (!ready) return;
         const controller = new AbortController();
         loadSeries(controller.signal);
         return () => controller.abort();
-    }, [loadSeries, ready]);
+    }, [loadSeries, ready, userId]);
 
     const handleRemovePost = async (postId: number) => {
         if (!seriesId || !token) return;
