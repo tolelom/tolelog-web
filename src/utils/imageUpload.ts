@@ -1,7 +1,7 @@
-import { IMAGE_CONSTRAINTS } from './constants';
+import { IMAGE_CONSTRAINTS } from '../lib/constants';
 import { IMAGE_API } from '../lib/api';
 import type { ImageValidationResult } from '../types';
-import { resolveAssetUrl } from './assetUrl';
+import { resolveAssetUrl } from '../lib/assetUrl';
 
 export const validateImageFile = (file: File): ImageValidationResult => {
     if (!(IMAGE_CONSTRAINTS.ALLOWED_TYPES as readonly string[]).includes(file.type)) {

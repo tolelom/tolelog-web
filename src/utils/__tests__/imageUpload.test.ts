@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../constants';
+import { API_BASE_URL } from '../../lib/constants';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('../../lib/api', () => ({

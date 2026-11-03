@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { LIKE_API } from '../lib/api';
-import { notify } from '../utils/notify';
+import { notify } from '../lib/notify';
 
 export function useLike(postId: string | undefined, token: string | null, initialLikeCount: number) {
     const [liked, setLiked] = useState(false);

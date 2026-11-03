@@ -2,7 +2,7 @@ import { useState, useContext, useEffect, useRef, ChangeEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { POST_API, SERIES_API } from '../lib/api';
-import { STORAGE_KEYS } from '../utils/constants';
+import { STORAGE_KEYS } from '../lib/constants';
 import { invalidateCache } from '../lib/api/cache';
 import { postLimitError } from '../utils/postValidation';
 import { useAutoSave, type SaveStatus } from '../hooks/useAutoSave';

@@ -1,8 +1,8 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { POST_API, SERIES_API, TAG_API, USER_API } from '../lib/api';
-import { BLOG_OWNER_ID } from '../utils/constants';
-import { resolveAssetUrl } from '../utils/assetUrl';
+import { BLOG_OWNER_ID } from '../lib/constants';
+import { resolveAssetUrl } from '../lib/assetUrl';
 import { cachedFetch } from '../lib/api/cache';
 import { charCount, SEARCH_QUERY_MAX, SEARCH_QUERY_MIN } from '../lib/api/limits';
 import { PostListItem, Series, User, TagInfo } from '../types';

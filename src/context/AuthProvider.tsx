@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { AuthContext, type LoginParams } from './AuthContext';
 import { AUTH_API } from '../lib/api';
 import { AUTH_TOKENS_EVENT, type AuthTokens } from '../lib/api/client';
-import { STORAGE_KEYS } from '../utils/constants';
+import { STORAGE_KEYS } from '../lib/constants';
 
 const isBrowser = typeof window !== 'undefined';
 

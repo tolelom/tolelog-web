@@ -1,6 +1,6 @@
 import { escapeHtml } from './text';
 import { renderKatex } from './katex';
-import { resolveContentImageUrl } from '../assetUrl';
+import { resolveContentImageUrl } from '../../lib/assetUrl';
 
 export function parseInlineWithRefs(text: string, refs: Set<string>): string {
     if (!text) return '';

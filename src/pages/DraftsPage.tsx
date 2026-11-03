@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { POST_API } from '../lib/api';
 import type { PostListItem } from '../types';
-import { formatDate } from '../utils/format';
+import { formatDate } from '../lib/format';
 import { useToast } from '../hooks/useToast';
 import PageMeta from '../components/PageMeta';
 import './DraftsPage.css';

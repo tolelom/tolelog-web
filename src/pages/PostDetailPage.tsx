@@ -5,7 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import { POST_API } from '../lib/api';
 import { invalidateCache } from '../lib/api/cache';
 import { renderMarkdown } from '../utils/markdown';
-import { formatDateLong } from '../utils/format';
+import { formatDateLong } from '../lib/format';
 import { Post, PostListItem } from '../types';
 import { useTOC } from '../hooks/useTOC';
 import { useSeriesNav } from '../hooks/useSeriesNav';

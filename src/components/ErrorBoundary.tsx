@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo } from 'react';
-import { captureException } from '../utils/errorReporting';
+import { captureException } from '../lib/errorReporting';
 import './ErrorBoundary.css';
 
 interface ErrorBoundaryProps {
