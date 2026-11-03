@@ -10,10 +10,6 @@
     background-color: var(--error-bg); color: var(--error-text); padding: 12px 16px; border-radius: 4px;
     margin-bottom: 16px; border-left: 4px solid var(--error-border);
 }
-.success-message {
-    background-color: var(--success-bg); color: var(--success-text); padding: 12px 16px; border-radius: 4px;
-    margin-bottom: 16px; border-left: 4px solid var(--success-border);
-}
 
 .restore-prompt {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-overlay);
@@ -46,7 +42,6 @@
 .title-input:focus { border-bottom-color: var(--accent-color); }
 .title-input::placeholder { color: var(--text-muted); }
 
-/* 태그 입력 */
 .tags-section { margin-bottom: 16px; }
 .tags-input-wrapper { position: relative; }
 .tags-input {
@@ -57,7 +52,6 @@
 .tags-input::placeholder { color: var(--text-muted); }
 .tags-preview { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 
-/* 태그 자동완성 드롭다운 */
 .tags-autocomplete {
     position: absolute;
     top: 100%;
@@ -100,7 +94,6 @@
     color: var(--text-muted);
 }
 
-/* 시리즈 선택 */
 .series-section { margin-bottom: 16px; }
 .series-select {
     width: 100%; font-size: 14px; padding: 10px 12px; border: 1px solid var(--border-color);
@@ -109,7 +102,6 @@
     cursor: pointer;
 }
 
-/* 에디터 툴바 — 에디터와 연결된 느낌 */
 .editor-toolbar {
     display: flex; align-items: center; gap: 8px;
     padding: 8px 12px; background-color: var(--bg-secondary);
@@ -140,7 +132,6 @@
     display: inline-block; width: 1px; height: 20px; background-color: var(--border-color); margin: 0 4px;
 }
 
-/* 하단 버튼 영역 — sticky */
 .button-section {
     display: flex; justify-content: space-between; align-items: center; padding: 16px;
     background-color: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color); gap: 16px;
@@ -149,7 +140,6 @@
 }
 .left-content { display: flex; align-items: center; gap: 16px; flex: 1; }
 
-/* 토글 스위치 */
 .toggle-switch {
     display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;
 }
@@ -195,14 +185,12 @@
 .cancel-button:hover:not(:disabled) { background-color: var(--bg-hover); border-color: var(--text-muted); }
 .cancel-button:disabled { cursor: not-allowed; opacity: 0.7; }
 
-/* 미리보기 버튼 */
 .toolbar-btn-preview {
     width: auto; padding: 0 12px; font-size: 13px; font-weight: 500;
     white-space: nowrap;
 }
 .toolbar-btn-preview:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* 미리보기 모달 */
 .preview-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     background-color: var(--bg-overlay); display: flex;

@@ -1,37 +1,51 @@
-import { useState, useContext, useEffect, useRef, useCallback, useMemo, ChangeEvent } from 'react';
+import { useState, useContext, useEffect, useRef, ChangeEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { POST_API, SERIES_API } from '../utils/api';
 import { STORAGE_KEYS } from '../utils/constants';
 import { invalidateCache } from '../utils/apiCache';
-import { useAutoSave } from '../hooks/useAutoSave';
+import { useAutoSave, type SaveStatus } from '../hooks/useAutoSave';
 import { useToast } from '../hooks/useToast';
 import { useReturnFocus } from '../hooks/useReturnFocus';
 import { useKatexReady } from '../hooks/useKatexReady';
+import { useLatestRef } from '../hooks/useLatestRef';
+import { useServerDraft } from '../hooks/useServerDraft';
 import PageMeta from '../components/PageMeta';
 import { postPath } from '../utils/slug';
-import BlockEditor from '../components/BlockEditor';
+import BlockEditor, { type BlockEditorHandle, type InsertImage } from '../components/BlockEditor';
 import TagAutocompleteInput from '../components/TagAutocompleteInput';
 import EditorToolbar from '../components/EditorToolbar';
 import PreviewModal from '../components/PreviewModal';
+import DraftRestorePrompt from '../components/DraftRestorePrompt';
+import { FORMAT_MARKS, type FormatType } from '../components/editorFormats';
+import type { ApiError } from '../utils/api/client';
 import { PostFormData, DraftData, Series } from '../types';
 import 'highlight.js/styles/atom-one-dark.css';
 import './EditorPage.css';
 
-interface EditorRef {
-    wrapSelection: (before: string, after: string) => void;
-    getActiveTextarea: () => HTMLTextAreaElement | HTMLDivElement | null;
+const EMPTY_FORM: PostFormData = { title: '', content: '', is_public: true, tags: '' };
+const NAVIGATE_AFTER_SAVE_MS = 800;
+const UNTITLED = '제목 없음';
+
+const SAVE_STATUS_VIEW: Record<SaveStatus, { className: string; label: string }> = {
+    saving: { className: 'saving', label: '저장 중...' },
+    saved: { className: 'saved', label: '\u2713 저장됨' },
+    error: { className: 'error', label: '\u2717 저장 실패' },
+};
+
+// 편집 대상 글이 바뀌면(새 글 ↔ 글 수정) 이전 글의 입력·임시저장 상태를 버리도록 새로 마운트한다.
+export default function EditorPage() {
+    const { postId } = useParams<{ postId: string }>();
+    return <PostEditor key={postId ?? 'new'} postId={postId} />;
 }
 
-const EMPTY_FORM: PostFormData = { title: '', content: '', is_public: true, tags: '' };
-
-export default function EditorPage() {
+function PostEditor({ postId }: { postId: string | undefined }) {
     const navigate = useNavigate();
-    const { postId } = useParams<{ postId: string }>();
     const { token, userId } = useContext(AuthContext);
+    const tokenRef = useLatestRef(token);
     const { toast } = useToast();
-    const imageInsertRef = useRef<((base64Data: string, fileName: string) => void) | null>(null);
-    const editorRef = useRef<EditorRef | null>(null);
+    const imageInsertRef = useRef<InsertImage | null>(null);
+    const editorRef = useRef<BlockEditorHandle | null>(null);
     const [formData, setFormData] = useState<PostFormData>(EMPTY_FORM);
     // 불러온 글(새 글이면 빈 양식). 이것과 같으면 고친 게 없으므로 임시저장하지 않는다.
     const [baseline, setBaseline] = useState<PostFormData>(EMPTY_FORM);
@@ -50,14 +64,12 @@ export default function EditorPage() {
     const [loadedStatus, setLoadedStatus] = useState<string | undefined>(undefined);
     const isEditingDraft = isEditMode && loadedStatus === 'draft';
 
-    // 모달 닫을 때 트리거 버튼으로 포커스 복원 (a11y)
     useReturnFocus(showRestorePrompt);
     useReturnFocus(showPreview);
 
-    // 미리보기에서 수식이 등장하면 KaTeX 로드 후 재렌더
+    // 미리보기는 renderMarkdown 을 렌더마다 부르므로, KaTeX 가 늦게 로드되면 다시 그리게만 한다.
     useKatexReady();
 
-    // 사용자의 시리즈 목록 로드
     useEffect(() => {
         if (!userId) return;
         const controller = new AbortController();
@@ -67,41 +79,11 @@ export default function EditorPage() {
         return () => controller.abort();
     }, [userId, token]);
 
-    // 서버 draft 자동 저장 (새 글 작성 시에만). 발행할 때는 이 draft 를 발행해 고아 draft 를 남기지 않는다.
-    const serverDraftIdRef = useRef<number | null>(null);
-    const serverSaveInFlightRef = useRef<Promise<void> | null>(null);
-    const isPublishingRef = useRef(false);
+    const { serverSaveOptions, beginPublish, cancelPublish } = useServerDraft(token, !isEditMode);
 
-    const handleServerSave = useCallback(async (data: PostFormData) => {
-        // 서버는 빈 본문을 거부하고, 발행 중에 draft 로 저장하면 발행한 글이 draft 로 되돌아간다
-        if (!token || !data.content.trim() || isPublishingRef.current) return;
-        const title = data.title.trim() || '제목 없음';
-        const save = (async () => {
-            if (serverDraftIdRef.current) {
-                await POST_API.saveDraft(serverDraftIdRef.current, title, data.content, data.tags || '', token);
-            } else {
-                const result = await POST_API.createDraft(title, data.content, data.tags || '', token);
-                serverDraftIdRef.current = result.data.id;
-            }
-        })();
-        serverSaveInFlightRef.current = save;
-        try {
-            await save;
-        } finally {
-            if (serverSaveInFlightRef.current === save) serverSaveInFlightRef.current = null;
-        }
-    }, [token]);
-
-    const serverSaveOptions = useMemo(() => ({
-        enabled: !isEditMode && !!token,
-        onSave: handleServerSave,
-    }), [isEditMode, token, handleServerSave]);
-
-    // 자동 저장 훅 (수정 모드는 별도 키로 저장)
     const draftKey = isEditMode ? `${STORAGE_KEYS.DRAFT_EDIT}:${postId}` : STORAGE_KEYS.DRAFT;
     const { saveStatus, loadDraft, clearDraft, hasDraft, getFormattedSaveTime } = useAutoSave(formData, draftKey, serverSaveOptions, baseline);
 
-    // 편집 중 페이지 이탈 경고
     useEffect(() => {
         const handleBeforeUnload = (e: BeforeUnloadEvent) => {
             if (formData.title || formData.content) {
@@ -112,18 +94,21 @@ export default function EditorPage() {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [formData.title, formData.content]);
 
-    // 글 수정 모드: 기존 글 불러오기
     useEffect(() => {
         const controller = new AbortController();
+        const offerDraftRestore = () => {
+            if (!hasDraft()) return;
+            setDraftInfo(loadDraft());
+            setShowRestorePrompt(true);
+        };
 
         if (postId) {
             const loadPost = async () => {
                 try {
                     setIsLoading(true);
-                    const response = await POST_API.getPost(postId, { signal: controller.signal, token: token ?? undefined });
+                    const response = await POST_API.getPost(postId, { signal: controller.signal, token: tokenRef.current ?? undefined });
                     if (response.status === 'success') {
                         const post = response.data;
-                        // 본인 글이 아니면 상세 페이지로 리다이렉트
                         if (userId && post.user_id !== userId) {
                             navigate(postPath(post), { replace: true });
                             return;
@@ -141,12 +126,7 @@ export default function EditorPage() {
                             setSelectedSeriesId(String(post.series.series_id));
                             setLoadedSeriesId(String(post.series.series_id));
                         }
-                        // 수정 모드 임시저장 확인
-                        if (hasDraft()) {
-                            const draft = loadDraft();
-                            setDraftInfo(draft);
-                            setShowRestorePrompt(true);
-                        }
+                        offerDraftRestore();
                     } else {
                         setError('글을 불러올 수 없습니다.');
                     }
@@ -159,17 +139,12 @@ export default function EditorPage() {
             };
             loadPost();
         } else {
-            // 신규 글 모드: 백업 확인
-            if (hasDraft()) {
-                const draft = loadDraft();
-                setDraftInfo(draft);
-                setShowRestorePrompt(true);
-            }
+            offerDraftRestore();
             setIsLoading(false);
         }
 
         return () => controller.abort();
-    }, [postId, hasDraft, loadDraft, navigate, userId]);
+    }, [postId, hasDraft, loadDraft, navigate, userId, tokenRef]);
 
     const handleRestoreDraft = () => {
         if (draftInfo) {
@@ -197,7 +172,6 @@ export default function EditorPage() {
         }));
     };
 
-    // BlockEditor content 변경
     const handleContentChange = (newContent: string) => {
         setFormData((prev) => ({
             ...prev,
@@ -205,35 +179,25 @@ export default function EditorPage() {
         }));
     };
 
-    // 이미지 삽입 핸들러
-    const handleImageInsert = (base64Data: string, fileName: string) => {
-        if (imageInsertRef.current) {
-            imageInsertRef.current(base64Data, fileName);
-        }
+    const handleImageInsert: InsertImage = (src, fileName) => {
+        imageInsertRef.current?.(src, fileName);
     };
 
-    // 툴바 포맷 버튼 핸들러
-    const handleFormat = (type: string) => {
-        if (!editorRef.current) return;
-        switch (type) {
-            case 'bold':
-                editorRef.current.wrapSelection('**', '**');
-                break;
-            case 'italic':
-                editorRef.current.wrapSelection('*', '*');
-                break;
-            case 'code':
-                editorRef.current.wrapSelection('`', '`');
-                break;
-            case 'link':
-                editorRef.current.wrapSelection('[', '](url)');
-                break;
-            case 'heading':
-                editorRef.current.wrapSelection('## ', '');
-                break;
-            case 'strikethrough':
-                editorRef.current.wrapSelection('~~', '~~');
-                break;
+    const handleFormat = (type: FormatType) => {
+        editorRef.current?.wrapSelection(...FORMAT_MARKS[type]);
+    };
+
+    // 실패해도 글은 이미 저장됐으므로 알리기만 하고 넘어간다.
+    const syncSeries = async (savedPostId: number, authToken: string) => {
+        try {
+            if (selectedSeriesId) {
+                await SERIES_API.addPost(selectedSeriesId, savedPostId, 0, authToken);
+            } else if (loadedSeriesId) {
+                await SERIES_API.removePost(loadedSeriesId, savedPostId, authToken);
+            }
+        } catch (err: unknown) {
+            const reason = err instanceof Error ? err.message : '';
+            toast.error(`글은 저장했지만 시리즈에 반영하지 못했습니다${reason ? `: ${reason}` : ''}`);
         }
     };
 
@@ -254,12 +218,10 @@ export default function EditorPage() {
 
         setIsSaving(true);
         setError('');
-        isPublishingRef.current = true;
+        const serverDraftId = await beginPublish();
 
         try {
-            // 진행 중인 자동저장이 draft 를 만들고 있으면 그 id 를 받은 뒤 발행한다
-            await serverSaveInFlightRef.current?.catch(() => {});
-            const targetPostId = isEditMode ? postId : serverDraftIdRef.current;
+            const targetPostId = isEditMode ? postId : serverDraftId;
 
             let response;
             if (targetPostId) {
@@ -286,22 +248,8 @@ export default function EditorPage() {
             }
 
             const savedPostId = targetPostId ? Number(targetPostId) : response.data?.id;
+            if (savedPostId) await syncSeries(savedPostId, token);
 
-            // 시리즈 추가·변경·해제. 실패해도 글은 이미 저장됐으므로 알리고 넘어간다.
-            if (savedPostId && token) {
-                try {
-                    if (selectedSeriesId) {
-                        await SERIES_API.addPost(selectedSeriesId, savedPostId, 0, token);
-                    } else if (loadedSeriesId) {
-                        await SERIES_API.removePost(loadedSeriesId, savedPostId, token);
-                    }
-                } catch (seriesErr: unknown) {
-                    const reason = seriesErr instanceof Error ? seriesErr.message : '';
-                    toast.error(`글은 저장했지만 시리즈에 반영하지 못했습니다${reason ? `: ${reason}` : ''}`);
-                }
-            }
-
-            // 홈 캐시 무효화
             invalidateCache('posts:');
             invalidateCache('search:');
 
@@ -309,28 +257,22 @@ export default function EditorPage() {
             toast.success(successMsg);
             clearDraft();
 
-            const postIdToNavigate = savedPostId;
-            const targetPath = postIdToNavigate
-                ? postPath({ id: Number(postIdToNavigate), title: formData.title })
-                : '/';
-            // 토스트가 잠깐 보이도록 짧은 지연 후 이동
-            setTimeout(() => navigate(targetPath), 800);
+            const targetPath = savedPostId ? postPath({ id: savedPostId, title: formData.title }) : '/';
+            setTimeout(() => navigate(targetPath), NAVIGATE_AFTER_SAVE_MS);
         } catch (err: unknown) {
-            const apiErr = err as { status?: number; message?: string };
-            isPublishingRef.current = false;
-            if (apiErr.status === 401) {
-                // 세션 만료 토스트는 api/client.ts(request)가 띄우므로 여기서는 이동만 한다
+            cancelPublish();
+            if ((err as ApiError).status === 401) {
+                // 세션 만료 토스트는 request() 가 이미 띄웠다.
                 navigate('/login');
                 return;
             }
             const msg = err instanceof Error ? err.message : '글 저장에 실패했습니다';
             toast.error(msg);
-            setError(msg); // 폼 영역에도 표시해 사용자가 입력값을 잃지 않게
+            setError(msg);
             setIsSaving(false);
         }
     };
 
-    // 초안 편집의 임시저장: status 는 draft 로 두고 페이지에 머문다.
     const handleSaveDraft = async () => {
         if (!postId) return;
         if (!formData.content.trim()) {
@@ -348,7 +290,7 @@ export default function EditorPage() {
         try {
             await POST_API.saveDraft(
                 postId,
-                formData.title.trim() || '제목 없음',
+                formData.title.trim() || UNTITLED,
                 formData.content,
                 formData.tags || '',
                 token,
@@ -358,8 +300,7 @@ export default function EditorPage() {
             clearDraft();
             toast.success('임시저장했습니다');
         } catch (err: unknown) {
-            const apiErr = err as { status?: number };
-            if (apiErr.status === 401) {
+            if ((err as ApiError).status === 401) {
                 navigate('/login');
                 return;
             }
@@ -373,8 +314,7 @@ export default function EditorPage() {
 
     const handleCancel = () => {
         if (isEditMode && postId) {
-            // 현재 편집 중인 제목 기준으로 canonical URL 생성.
-            // 만약 사용자가 제목을 수정했다가 취소한 경우 PostDetailPage 가 다시 정규화한다.
+            // 제목을 고치다 취소해도 글 상세가 주소를 저장된 제목으로 다시 맞춘다.
             navigate(postPath({ id: Number(postId), title: formData.title }));
         } else {
             navigate('/');
@@ -395,28 +335,18 @@ export default function EditorPage() {
     return (
         <div className="editor-page">
             <PageMeta title={isEditMode ? '글 수정' : '새 글 작성'} noindex />
-            {/* 백업 복구 프롬프트 */}
             {showRestorePrompt && draftInfo && (
-                <div className="restore-prompt" role="dialog" aria-modal="true" aria-label="임시 저장 복구" onKeyDown={(e) => { if (e.key === 'Escape') handleDiscardDraft(); }}>
-                    <div className="restore-content">
-                        <h3>{isEditMode ? '이전에 수정하던 내용이 있습니다' : '저장된 임시 글이 있습니다'}</h3>
-                        <p>마지막 저장: {getFormattedSaveTime()}</p>
-                        <div className="restore-actions">
-                            <button className="btn-restore" onClick={handleRestoreDraft}>
-                                복구하기
-                            </button>
-                            <button className="btn-discard" onClick={handleDiscardDraft}>
-                                버리기
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <DraftRestorePrompt
+                    isEditMode={isEditMode}
+                    savedAgo={getFormattedSaveTime()}
+                    onRestore={handleRestoreDraft}
+                    onDiscard={handleDiscardDraft}
+                />
             )}
 
             {error && <div className="error-message">{error}</div>}
 
             <form className="editor-form" onSubmit={(e) => e.preventDefault()}>
-                {/* 제목 입력 */}
                 <div className="title-section">
                     <input
                         type="text"
@@ -429,13 +359,11 @@ export default function EditorPage() {
                     />
                 </div>
 
-                {/* 태그 입력 + 자동완성 */}
                 <TagAutocompleteInput
                     value={formData.tags}
                     onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
                 />
 
-                {/* 시리즈 선택 */}
                 {userSeries.length > 0 && (
                     <div className="series-section">
                         <select
@@ -451,7 +379,6 @@ export default function EditorPage() {
                     </div>
                 )}
 
-                {/* 에디터 툴바 */}
                 <EditorToolbar
                     onFormat={handleFormat}
                     onImageInsert={handleImageInsert}
@@ -459,7 +386,6 @@ export default function EditorPage() {
                     previewDisabled={!formData.content.trim()}
                 />
 
-                {/* 블록 에디터 */}
                 <BlockEditor
                     ref={editorRef}
                     content={formData.content}
@@ -468,7 +394,6 @@ export default function EditorPage() {
                     token={token}
                 />
 
-                {/* 버튼 섹션 */}
                 <div className="button-section">
                     <div className="left-content">
                         <label className="toggle-switch">
@@ -484,15 +409,9 @@ export default function EditorPage() {
                             </span>
                         </label>
                         <div className="save-indicator">
-                            {saveStatus === 'saving' && (
-                                <span className="save-status saving">저장 중...</span>
-                            )}
-                            {saveStatus === 'saved' && (
-                                <span className="save-status saved">&#10003; 저장됨</span>
-                            )}
-                            {saveStatus === 'error' && (
-                                <span className="save-status error">&#10007; 저장 실패</span>
-                            )}
+                            <span className={`save-status ${SAVE_STATUS_VIEW[saveStatus].className}`}>
+                                {SAVE_STATUS_VIEW[saveStatus].label}
+                            </span>
                         </div>
                     </div>
                     <div className="button-group">
@@ -537,7 +456,6 @@ export default function EditorPage() {
                 </div>
             </form>
 
-            {/* 미리보기 모달 */}
             {showPreview && (
                 <PreviewModal
                     title={formData.title}

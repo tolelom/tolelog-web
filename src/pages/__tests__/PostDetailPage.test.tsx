@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import PostDetailPage from '../PostDetailPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
@@ -130,4 +130,41 @@ describe('PostDetailPage', () => {
         fireEvent.click(await screen.findByRole('button', { name: '기초' }));
         expect(await screen.findByText(`홈 ?tag=${encodeURIComponent('기초')}`)).toBeInTheDocument();
     });
+
+    it('토큰만 갱신되면 글을 다시 부르지 않고, 다른 사용자로 바뀌면 다시 부른다', async () => {
+        mockGetPost.mockResolvedValue({ status: 'success', data: makePost({ title: '긴 글' }) });
+        const { rerenderAuth } = renderWithProviders(<PostDetailPage />, { authValue: { token: 'old', userId: 7 } });
+        await screen.findByRole('heading', { name: '긴 글' });
+
+        rerenderAuth({ token: 'refreshed', userId: 7 });
+        expect(screen.getByRole('heading', { name: '긴 글' })).toBeInTheDocument();
+        expect(mockGetPost).toHaveBeenCalledTimes(1);
+
+        rerenderAuth({ token: null, userId: null });
+        await waitFor(() => expect(mockGetPost).toHaveBeenCalledTimes(2));
+    });
+
+    it('삭제 확인 창은 Escape 로 닫히고, 확인하면 글을 지운 뒤 홈으로 간다', async () => {
+        mockGetPost.mockResolvedValueOnce({ status: 'success', data: makePost({ user_id: 42 }) });
+        vi.mocked(POST_API.deletePost).mockResolvedValueOnce({ status: 'success', data: null });
+        renderWithProviders(
+            <Routes>
+                <Route path="/post/:postId" element={<PostDetailPage />} />
+                <Route path="/" element={<p>홈 화면</p>} />
+            </Routes>,
+            { route: '/post/1', authValue: { token: 'T', userId: 42 } },
+        );
+
+        fireEvent.click(await screen.findByRole('button', { name: '삭제' }));
+        expect(screen.getByRole('dialog', { name: '글 삭제 확인' })).toBeInTheDocument();
+        fireEvent.keyDown(window, { key: 'Escape' });
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: '삭제' }));
+        const dialog = screen.getByRole('dialog', { name: '글 삭제 확인' });
+        fireEvent.click(within(dialog).getByRole('button', { name: '삭제' }));
+        await waitFor(() => expect(POST_API.deletePost).toHaveBeenCalledWith('1', 'T'));
+        expect(await screen.findByText('홈 화면')).toBeInTheDocument();
+    });
 });
+

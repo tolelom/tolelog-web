@@ -15,7 +15,6 @@ export default function Navbar() {
 
     const isEditorPage = location.pathname.startsWith('/editor');
 
-    // 스크롤 다운 숨김 / 업 재등장
     useEffect(() => {
         if (isEditorPage) return;
         const handleScroll = () => {
@@ -31,7 +30,6 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, [isEditorPage]);
 
-    // 드롭다운 외부 클릭 닫기
     useEffect(() => {
         if (!dropdownOpen) return;
         const handleClick = (e: MouseEvent) => {
@@ -50,7 +48,6 @@ export default function Navbar() {
         };
     }, [dropdownOpen]);
 
-    // 페이지 이동 시 드롭다운 닫기
     useEffect(() => {
         setDropdownOpen(false);
     }, [location.pathname]);
@@ -60,7 +57,7 @@ export default function Navbar() {
         logout();
     }, [logout]);
 
-    // EditorPage에서는 렌더링하지 않음
+    // 에디터는 자체 툴바·버튼을 화면 전체로 쓴다.
     if (isEditorPage) {
         return null;
     }

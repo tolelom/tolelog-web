@@ -21,39 +21,40 @@ export const validateImageFile = (file: File): ImageValidationResult => {
     return { valid: true };
 };
 
+const COMPRESS_FAILED_MESSAGE = '이미지를 읽지 못했습니다. 다른 파일로 시도해 주세요.';
+
 export const compressImage = async (
     file: File,
     maxWidth: number = IMAGE_CONSTRAINTS.MAX_WIDTH,
     quality: number = IMAGE_CONSTRAINTS.QUALITY
 ): Promise<File> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+        const fail = () => reject(new Error(COMPRESS_FAILED_MESSAGE));
         const reader = new FileReader();
-        reader.onload = (e: ProgressEvent<FileReader>) => {
+        reader.onerror = fail;
+        reader.onload = () => {
             const img = new Image();
+            img.onerror = fail;
             img.onload = () => {
-                const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
-
                 if (width > maxWidth) {
                     height = Math.round((height * maxWidth) / width);
                     width = maxWidth;
                 }
-
+                const canvas = document.createElement('canvas');
                 canvas.width = width;
                 canvas.height = height;
-                const ctx = canvas.getContext('2d')!;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return fail();
                 ctx.drawImage(img, 0, 0, width, height);
-
                 canvas.toBlob(
-                    (blob) => {
-                        resolve(new File([blob!], file.name, { type: 'image/jpeg' }));
-                    },
+                    (blob) => (blob ? resolve(new File([blob], file.name, { type: 'image/jpeg' })) : fail()),
                     'image/jpeg',
                     quality
                 );
             };
-            img.src = e.target!.result as string;
+            img.src = reader.result as string;
         };
         reader.readAsDataURL(file);
     });

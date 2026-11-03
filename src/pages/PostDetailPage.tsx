@@ -7,40 +7,28 @@ import { invalidateCache } from '../utils/apiCache';
 import { renderMarkdown } from '../utils/markdown';
 import { formatDateLong } from '../utils/format';
 import { Post, PostListItem } from '../types';
-import { useTOC, TocItem } from '../hooks/useTOC';
+import { useTOC } from '../hooks/useTOC';
 import { useSeriesNav } from '../hooks/useSeriesNav';
 import { useLike } from '../hooks/useLike';
 import { useCopyCodeBlock } from '../hooks/useCopyCodeBlock';
 import { useReturnFocus } from '../hooks/useReturnFocus';
 import { useKatexReady } from '../hooks/useKatexReady';
+import { useLatestRef } from '../hooks/useLatestRef';
 import { useToast } from '../hooks/useToast';
 import CommentSection from '../components/CommentSection';
 import PageMeta from '../components/PageMeta';
 import TagChip from '../components/TagChip';
 import { ArticleJsonLd, BreadcrumbJsonLd } from '../components/StructuredData';
+import TocList from '../components/post/TocList';
+import SeriesNavigation from '../components/post/SeriesNavigation';
+import DeletePostModal from '../components/post/DeletePostModal';
 import { splitTags } from '../utils/tags';
+import { firstHttpImage, plainTextExcerpt } from '../utils/postSummary';
 import 'highlight.js/styles/atom-one-dark.css';
 import './PostDetailPage.css';
 
-function getPlainText(content: string, maxLength: number = 160): string {
-    return content
-        .replace(/!\[.*?\]\([^)]*\)/g, '')
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-        .replace(/#{1,6}\s+/g, '')
-        .replace(/[*_~`>]/g, '')
-        .replace(/\n+/g, ' ')
-        .trim()
-        .slice(0, maxLength);
-}
-
-function getFirstHttpImage(content: string): string | null {
-    const match = content.match(/!\[.*?\]\((https?:\/\/[^)]+)\)/);
-    return match ? match[1] : null;
-}
-
 // 같은 라우트에서 다른 글로 옮겨 가면 글 ID 를 key 로 새로 마운트해 이전 글의 상태(글·오류·좋아요·시리즈)를 버린다.
 export default function PostDetailPage() {
-    // URL 의 :postId 는 "123" 또는 "hello-world-123" 모두 가능. 트레일링 숫자에서 실제 ID 추출.
     const { postId: rawPostId } = useParams<{ postId: string }>();
     const parsed = useMemo(() => parsePostSlugId(rawPostId), [rawPostId]);
     const numericId = parsed ? String(parsed.id) : undefined;
@@ -51,6 +39,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
     const navigate = useNavigate();
     const location = useLocation();
     const { userId, token, ready } = useContext(AuthContext);
+    const tokenRef = useLatestRef(token);
     const prerenderedMeta = useLoaderData() as PostListItem | null | undefined;
     const [post, setPost] = useState<Post | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -59,29 +48,25 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
     const [deleteError, setDeleteError] = useState<string>('');
     const contentRef = useRef<HTMLDivElement | null>(null);
-    const deleteModalRef = useRef<HTMLDivElement | null>(null);
 
     const { toc, activeTocId, mobileTocOpen, setMobileTocOpen } = useTOC(post?.content ?? null);
     const { seriesNav, seriesTocOpen, seriesDetail, toggleSeriesToc } = useSeriesNav(numericId, token ?? undefined);
     const { liked, likeCount, likeLoading, handleLike } = useLike(numericId, token, post?.like_count || 0);
     const { toast } = useToast();
 
-    // 삭제 확인 모달 닫을 때 트리거 버튼으로 포커스 복원 (a11y)
     useReturnFocus(deleteConfirm);
 
-    // KaTeX 로드 완료 시 재렌더 트리거 (수식 콘텐츠를 정상 표시하기 위해)
     const katexVersion = useKatexReady();
     const renderedHtml = useMemo(
         () => ({ __html: post ? renderMarkdown(post.content) : '' }),
-        // katexVersion이 바뀌면 renderMarkdown 결과(수식 부분)가 달라지므로 의도된 의존성
+        // renderMarkdown 은 KaTeX 가 로드되기 전엔 수식을 원문으로 그리므로, 로드되면 다시 그린다.
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [post, katexVersion],
     );
 
-    // 코드 블록 복사 버튼 이벤트 위임
     useCopyCodeBlock(contentRef, !!post);
 
-    // 글 로드
+    // 토큰이 갱신돼도 보는 사람이 같으면 다시 부르지 않는다(조회수·스크롤·댓글 입력 유지).
     useEffect(() => {
         if (!ready) return;
         if (!numericId) {
@@ -93,7 +78,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
         const loadPost = async () => {
             try {
                 setIsLoading(true);
-                const response = await POST_API.getPost(numericId, { signal: controller.signal, token: token ?? undefined });
+                const response = await POST_API.getPost(numericId, { signal: controller.signal, token: tokenRef.current ?? undefined });
                 if (response.status === 'success') {
                     setPost(response.data);
                 } else {
@@ -108,10 +93,9 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
         };
         loadPost();
         return () => controller.abort();
-    }, [numericId, token, ready]);
+    }, [numericId, userId, ready, tokenRef]);
 
-    // canonical URL 로 자동 정규화: /post/123 또는 슬러그가 어긋난 URL 이면
-    // canonical 슬러그 URL 로 history.replaceState 해서 주소창만 정리한다 (실제 네비게이션 없음).
+    // /post/123 이나 제목이 바뀐 옛 슬러그로 들어오면 주소창만 지금 제목의 주소로 바꾼다.
     useEffect(() => {
         if (!post) return;
         const canonical = postPath({ id: post.id, title: post.title });
@@ -120,32 +104,10 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
         }
     }, [post, location.pathname, location.search, location.hash, navigate]);
 
-    // 모달 배경 스크롤 잠금
-    useEffect(() => {
-        document.body.style.overflow = deleteConfirm ? 'hidden' : '';
-        return () => { document.body.style.overflow = ''; };
-    }, [deleteConfirm]);
-
-    // 삭제 모달 키보드 처리
-    useEffect(() => {
-        if (!deleteConfirm) return;
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') { setDeleteConfirm(false); setDeleteError(''); return; }
-            if (e.key === 'Tab' && deleteModalRef.current) {
-                const focusable = deleteModalRef.current.querySelectorAll<HTMLElement>('button:not(:disabled)');
-                if (focusable.length === 0) return;
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
-                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-            }
-        };
-        requestAnimationFrame(() => {
-            deleteModalRef.current?.querySelector<HTMLElement>('.btn-delete-cancel')?.focus();
-        });
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [deleteConfirm]);
+    const closeDeleteModal = () => {
+        setDeleteConfirm(false);
+        setDeleteError('');
+    };
 
     const handleDelete = async () => {
         if (!numericId || !token) return;
@@ -226,8 +188,8 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
     const createdAt = formatDateLong(post.created_at);
     const updatedAt = formatDateLong(post.updated_at);
 
-    const metaDescription = getPlainText(post.content);
-    const ogImage = getFirstHttpImage(post.content) ?? undefined;
+    const metaDescription = plainTextExcerpt(post.content);
+    const ogImage = firstHttpImage(post.content) ?? undefined;
     const tagList = post.tags ? splitTags(post.tags) : [];
     const postCanonical = postPath({ id: post.id, title: post.title });
 
@@ -270,13 +232,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
             {toc.length > 0 && (
                 <nav className="toc-panel" aria-label="목차">
                     <p className="toc-title">목차</p>
-                    <ul className="toc-list">
-                        {toc.map((item: TocItem, i: number) => (
-                            <li key={i} className={`toc-item toc-level-${item.level}`}>
-                                <a href={`#${item.id}`} className={`toc-link${activeTocId === item.id ? ' toc-link-active' : ''}`}>{item.text}</a>
-                            </li>
-                        ))}
-                    </ul>
+                    <TocList items={toc} activeId={activeTocId} className="toc-list" />
                 </nav>
             )}
             <article className="post-article">
@@ -309,13 +265,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
                     <div className="toc-mobile">
                         <button className="toc-mobile-toggle" onClick={() => setMobileTocOpen(v => !v)}>목차 {mobileTocOpen ? '▲' : '▼'}</button>
                         {mobileTocOpen && (
-                            <ul className="toc-mobile-list">
-                                {toc.map((item: TocItem, i: number) => (
-                                    <li key={i} className={`toc-item toc-level-${item.level}`}>
-                                        <a href={`#${item.id}`} className={`toc-link${activeTocId === item.id ? ' toc-link-active' : ''}`} onClick={() => setMobileTocOpen(false)}>{item.text}</a>
-                                    </li>
-                                ))}
-                            </ul>
+                            <TocList items={toc} activeId={activeTocId} className="toc-mobile-list" onNavigate={() => setMobileTocOpen(false)} />
                         )}
                     </div>
                 )}
@@ -330,36 +280,13 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
                 </div>
 
                 {seriesNav && (
-                    <nav className="series-nav" aria-label="시리즈 네비게이션">
-                        <div className="series-nav-header">
-                            <Link to={`/series/${seriesNav.series_id}`} className="series-nav-title">{seriesNav.series_title}</Link>
-                            <div className="series-nav-header-right">
-                                <span className="series-nav-count">{seriesNav.current_order} / {seriesNav.total_posts}</span>
-                                <button className="series-toc-toggle" onClick={toggleSeriesToc} aria-label={seriesTocOpen ? '목록 접기' : '목록 펼치기'}>{seriesTocOpen ? '▲' : '▼'}</button>
-                            </div>
-                        </div>
-                        {seriesTocOpen && seriesDetail && (
-                            <ul className="series-toc-list">
-                                {seriesDetail.posts.map((p, i) => (
-                                    <li key={p.id} className={p.id === post.id ? 'series-toc-current' : ''}>
-                                        <Link to={postPath({ id: p.id, title: p.title })}><span className="series-toc-num">{i + 1}.</span> {p.title}</Link>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                        <div className="series-nav-buttons">
-                            {seriesNav.prev_post ? (
-                                <Link to={postPath(seriesNav.prev_post)} className="series-nav-btn series-nav-prev">
-                                    <span className="series-nav-arrow">&larr;</span><span className="series-nav-label">{seriesNav.prev_post.title}</span>
-                                </Link>
-                            ) : <div />}
-                            {seriesNav.next_post ? (
-                                <Link to={postPath(seriesNav.next_post)} className="series-nav-btn series-nav-next">
-                                    <span className="series-nav-label">{seriesNav.next_post.title}</span><span className="series-nav-arrow">&rarr;</span>
-                                </Link>
-                            ) : <div />}
-                        </div>
-                    </nav>
+                    <SeriesNavigation
+                        nav={seriesNav}
+                        currentPostId={post.id}
+                        tocOpen={seriesTocOpen}
+                        detail={seriesDetail}
+                        onToggleToc={toggleSeriesToc}
+                    />
                 )}
 
                 {isOwner && (
@@ -370,19 +297,10 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
                     </div>
                 )}
 
-                {post && <CommentSection postId={post.id} />}
+                <CommentSection postId={post.id} />
 
                 {deleteConfirm && (
-                    <div className="delete-modal-overlay" onClick={() => { setDeleteConfirm(false); setDeleteError(''); }} role="dialog" aria-modal="true" aria-label="글 삭제 확인">
-                        <div className="delete-modal" ref={deleteModalRef} onClick={(e) => e.stopPropagation()}>
-                            <p className="delete-modal-text">이 글을 삭제하시겠습니까?</p>
-                            <p className="delete-modal-sub">삭제된 글은 복구할 수 없습니다.</p>
-                            <div className="delete-modal-actions">
-                                <button className="btn-delete-cancel" onClick={() => { setDeleteConfirm(false); setDeleteError(''); }} disabled={isDeleting}>취소</button>
-                                <button className="btn-delete-confirm" onClick={handleDelete} disabled={isDeleting}>{isDeleting ? '삭제 중...' : '삭제'}</button>
-                            </div>
-                        </div>
-                    </div>
+                    <DeletePostModal isDeleting={isDeleting} onConfirm={handleDelete} onCancel={closeDeleteModal} />
                 )}
             </article>
         </div>
