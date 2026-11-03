@@ -1,4 +1,4 @@
-import { charCount, POST_CONTENT_MAX, POST_TAGS_MAX, POST_TITLE_MAX, TAG_NAME_MAX } from './limits';
+import { charCount, POST_CONTENT_MAX, POST_TAGS_MAX, POST_TITLE_MAX, TAG_NAME_MAX } from '../lib/api/limits';
 import { splitTags } from './tags';
 
 interface PostLimitsInput {

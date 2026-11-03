@@ -2,12 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import HomePage from '../HomePage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
-import { POST_API, SERIES_API, TAG_API, USER_API } from '../../utils/api';
-import { clearCache } from '../../utils/apiCache';
+import { POST_API, SERIES_API, TAG_API, USER_API } from '../../lib/api';
+import { clearCache } from '../../lib/api/cache';
 import type { PostListItem } from '../../types';
 import { makePostListItem } from '../../test-utils/fixtures';
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     POST_API: { getPublicPosts: vi.fn(), searchPosts: vi.fn() },
     SERIES_API: { getUserSeries: vi.fn() },
     TAG_API: { getTags: vi.fn() },

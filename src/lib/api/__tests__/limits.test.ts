@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import spec from '../../../api-contract/swagger.json';
+import spec from '../../../../api-contract/swagger.json';
 import {
     charCount, COMMENT_MAX, PASSWORD_MAX_BYTES, PASSWORD_MIN, POST_CONTENT_MAX, POST_TAGS_MAX, POST_TITLE_MAX,
     SEARCH_QUERY_MAX, SEARCH_QUERY_MIN, SERIES_DESCRIPTION_MAX, SERIES_TITLE_MAX, TAG_NAME_MAX, USERNAME_MAX,

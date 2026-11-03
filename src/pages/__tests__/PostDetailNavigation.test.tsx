@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import PostDetailPage from '../PostDetailPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { makePost } from '../../test-utils/fixtures';
-import { POST_API, LIKE_API, COMMENT_API, SERIES_API } from '../../utils/api';
+import { POST_API, LIKE_API, COMMENT_API, SERIES_API } from '../../lib/api';
 
 // 같은 라우트(/post/:postId) 안에서 다른 글로 옮겨 가는 경우. 시리즈 이전·다음 링크가 이 경로를 탄다.
 
@@ -15,7 +15,7 @@ vi.mock('react-router-dom', async () => {
     return { ...actual, useLoaderData: () => null };
 });
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     POST_API: { getPost: vi.fn(), deletePost: vi.fn() },
     LIKE_API: { getStatus: vi.fn(), toggle: vi.fn() },
     COMMENT_API: { getComments: vi.fn() },

@@ -2,10 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import SeriesDetailPage from '../SeriesDetailPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
-import { SERIES_API } from '../../utils/api';
+import { SERIES_API } from '../../lib/api';
 import type { SeriesDetail } from '../../types';
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     SERIES_API: { getSeries: vi.fn(), removePost: vi.fn(), reorderPosts: vi.fn() },
 }));
 

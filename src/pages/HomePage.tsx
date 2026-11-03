@@ -1,10 +1,10 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { POST_API, SERIES_API, TAG_API, USER_API } from '../utils/api';
+import { POST_API, SERIES_API, TAG_API, USER_API } from '../lib/api';
 import { BLOG_OWNER_ID } from '../utils/constants';
 import { resolveAssetUrl } from '../utils/assetUrl';
-import { cachedFetch } from '../utils/apiCache';
-import { charCount, SEARCH_QUERY_MAX, SEARCH_QUERY_MIN } from '../utils/limits';
+import { cachedFetch } from '../lib/api/cache';
+import { charCount, SEARCH_QUERY_MAX, SEARCH_QUERY_MIN } from '../lib/api/limits';
 import { PostListItem, Series, User, TagInfo } from '../types';
 import PageMeta from '../components/PageMeta';
 import Pager from '../components/Pager';

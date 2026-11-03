@@ -1,5 +1,5 @@
 import { IMAGE_CONSTRAINTS } from './constants';
-import { IMAGE_API } from './api';
+import { IMAGE_API } from '../lib/api';
 import type { ImageValidationResult } from '../types';
 import { resolveAssetUrl } from './assetUrl';
 

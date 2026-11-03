@@ -2,10 +2,10 @@ import { useState, useContext, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notify as toast } from '../utils/notify';
 import { AuthContext } from '../context/AuthContext';
-import { AUTH_API } from '../utils/api';
+import { AUTH_API } from '../lib/api';
 import PageMeta from '../components/PageMeta';
 import { isPasswordTooLong, PASSWORD_TOO_LONG_MESSAGE } from '../components/authValidation';
-import { charCount, PASSWORD_MIN } from '../utils/limits';
+import { charCount, PASSWORD_MIN } from '../lib/api/limits';
 import './SettingsPage.css';
 
 export default function SettingsPage() {

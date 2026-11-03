@@ -5,7 +5,7 @@ import EditorPage from '../EditorPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { makePost } from '../../test-utils/fixtures';
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     POST_API: {
         getPost: vi.fn(async () => ({ status: 'success', data: makePost({ id: 5, title: '기존 제목', content: '기존 본문', user_id: 42 }) })),
     },

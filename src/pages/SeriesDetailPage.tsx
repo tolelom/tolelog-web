@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { SERIES_API } from '../utils/api';
+import { SERIES_API } from '../lib/api';
 import { formatDateShort } from '../utils/format';
 import { SeriesDetail } from '../types';
 import PageMeta from '../components/PageMeta';

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { SERIES_API } from '../utils/api';
+import { SERIES_API } from '../lib/api';
 import { SeriesNav, SeriesDetail } from '../types';
 
 export function useSeriesNav(postId: string | undefined, token?: string) {

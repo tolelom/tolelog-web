@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useMemo, useRef, useCallback, ChangeEvent } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { USER_API, POST_API, SERIES_API } from '../utils/api';
+import { USER_API, POST_API, SERIES_API } from '../lib/api';
 import { validateImageFile, compressImage } from '../utils/imageUpload';
 import { resolveAssetUrl } from '../utils/assetUrl';
 import PageMeta from '../components/PageMeta';

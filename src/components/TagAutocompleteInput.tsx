@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, ChangeEvent } from 'react';
-import { TAG_API } from '../utils/api';
+import { TAG_API } from '../lib/api';
 import { TagInfo } from '../types';
 import { splitTags } from '../utils/tags';
 

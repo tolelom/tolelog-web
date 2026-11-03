@@ -3,7 +3,7 @@ import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import EditorPage from '../EditorPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { makePost } from '../../test-utils/fixtures';
-import { POST_API, SERIES_API, TAG_API } from '../../utils/api';
+import { POST_API, SERIES_API, TAG_API } from '../../lib/api';
 import { AUTO_SAVE_DELAY_MS, STORAGE_KEYS } from '../../utils/constants';
 import type { Post, SuccessResponse } from '../../types';
 
@@ -19,7 +19,7 @@ vi.mock('react-router-dom', async () => {
     };
 });
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     POST_API: {
         getPost: vi.fn(),
         createPost: vi.fn(),
@@ -37,7 +37,7 @@ vi.mock('../../utils/api', () => ({
     },
 }));
 
-vi.mock('../../utils/apiCache', () => ({
+vi.mock('../../lib/api/cache', () => ({
     invalidateCache: vi.fn(),
 }));
 

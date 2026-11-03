@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { POST_API } from '../utils/api';
+import { POST_API } from '../lib/api';
 import type { PostListItem } from '../types';
 import { formatDate } from '../utils/format';
 import { useToast } from '../hooks/useToast';

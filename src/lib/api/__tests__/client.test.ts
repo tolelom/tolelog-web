@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { AUTH_API, COMMENT_API, IMAGE_API, LIKE_API, POST_API } from '../api';
-import { AUTH_TOKENS_EVENT } from '../api/client';
-import { STORAGE_KEYS } from '../constants';
+import { AUTH_API, COMMENT_API, IMAGE_API, LIKE_API, POST_API } from '..';
+import { AUTH_TOKENS_EVENT } from '../client';
+import { STORAGE_KEYS } from '../../../utils/constants';
 
 // 백엔드 오류 응답은 { status: 'error', error: <코드>, message: <사용자 문구> } 이다.
 

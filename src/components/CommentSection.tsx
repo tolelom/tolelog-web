@@ -2,10 +2,10 @@ import { useState, useEffect, useContext, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { notify as toast } from '../utils/notify';
 import { AuthContext } from '../context/AuthContext';
-import { COMMENT_API } from '../utils/api';
+import { COMMENT_API } from '../lib/api';
 import { resolveAssetUrl } from '../utils/assetUrl';
 import { formatDate } from '../utils/format';
-import { COMMENT_MAX } from '../utils/limits';
+import { COMMENT_MAX } from '../lib/api/limits';
 import type { Comment } from '../types';
 import './CommentSection.css';
 

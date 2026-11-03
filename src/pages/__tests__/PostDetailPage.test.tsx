@@ -4,7 +4,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import PostDetailPage from '../PostDetailPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { makePost } from '../../test-utils/fixtures';
-import { POST_API, LIKE_API, COMMENT_API, SERIES_API } from '../../utils/api';
+import { POST_API, LIKE_API, COMMENT_API, SERIES_API } from '../../lib/api';
 
 // jsdom does not implement IntersectionObserver — provide a no-op stub
 class MockIntersectionObserver {
@@ -23,7 +23,7 @@ vi.mock('react-router-dom', async () => {
     };
 });
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     POST_API: { getPost: vi.fn(), deletePost: vi.fn() },
     LIKE_API: { getStatus: vi.fn(), toggle: vi.fn() },
     COMMENT_API: { getComments: vi.fn() },
