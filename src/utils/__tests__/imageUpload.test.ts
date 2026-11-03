@@ -1,5 +1,5 @@
 import { API_BASE_URL } from '../constants';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('../api', () => ({
     IMAGE_API: {
@@ -7,7 +7,7 @@ vi.mock('../api', () => ({
     },
 }));
 
-import { validateImageFile, uploadImageToServer } from '../imageUpload';
+import { validateImageFile, compressImage, uploadImageToServer } from '../imageUpload';
 import { IMAGE_API } from '../api';
 
 function makeFile(name: string, size: number, type: string): File {
@@ -82,5 +82,24 @@ describe('uploadImageToServer', () => {
         (IMAGE_API.upload as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('network'));
         const file = makeFile('x.png', 100, 'image/png');
         await expect(uploadImageToServer(file, 'token')).rejects.toThrow('network');
+    });
+});
+
+describe('compressImage', () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it('rejects instead of hanging when the browser cannot decode the image', async () => {
+        class BrokenImage {
+            onload: (() => void) | null = null;
+            onerror: (() => void) | null = null;
+            set src(_value: string) {
+                queueMicrotask(() => this.onerror?.());
+            }
+        }
+        vi.stubGlobal('Image', BrokenImage);
+        const file = new File([new Uint8Array([1, 2, 3])], 'broken.png', { type: 'image/png' });
+        await expect(compressImage(file)).rejects.toThrow('이미지를 읽지 못했습니다');
     });
 });
