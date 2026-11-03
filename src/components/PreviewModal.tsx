@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { renderMarkdown } from '../utils/markdown';
+import { renderMarkdown } from '../features/markdown';
 import { useCopyCodeBlock } from '../hooks/useCopyCodeBlock';
 import { splitTags } from '../utils/tags';
 

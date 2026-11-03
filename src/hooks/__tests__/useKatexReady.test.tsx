@@ -5,7 +5,7 @@ import { renderHook, act } from '@testing-library/react';
 const subscribers = new Set<() => void>();
 let katexReady = false;
 
-vi.mock('../../utils/markdownParser', () => ({
+vi.mock('../../features/markdown', () => ({
     isKatexReady: () => katexReady,
     subscribeKatexReady: (cb: () => void) => {
         subscribers.add(cb);
