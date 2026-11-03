@@ -5,6 +5,7 @@ import { AuthContext } from '../context/AuthContext';
 import { COMMENT_API } from '../utils/api';
 import { resolveAssetUrl } from '../utils/assetUrl';
 import { formatDate } from '../utils/format';
+import { COMMENT_MAX } from '../utils/limits';
 import type { Comment } from '../types';
 import './CommentSection.css';
 
@@ -88,7 +89,7 @@ export default memo(function CommentSection({ postId }: CommentSectionProps) {
                         placeholder="댓글을 작성해주세요..."
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
-                        maxLength={2000}
+                        maxLength={COMMENT_MAX}
                     />
                     <div className="comment-submit-row">
                         <button

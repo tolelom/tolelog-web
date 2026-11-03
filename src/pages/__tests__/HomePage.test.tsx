@@ -129,6 +129,17 @@ describe('HomePage', () => {
         expect(screen.queryByText(/오류가 발생했습니다/)).not.toBeInTheDocument();
     });
 
+    it('서버가 받지 않는 100자 넘는 검색어는 보내지 않고 알린다', async () => {
+        renderWithProviders(<HomePage />);
+        await screen.findByText('아직 작성된 글이 없습니다.');
+
+        fireEvent.change(screen.getByPlaceholderText('글 검색...'), { target: { value: '가'.repeat(101) } });
+
+        expect(await screen.findByText('100자 이하로 입력해 주세요.')).toBeInTheDocument();
+        await new Promise(r => setTimeout(r, 500));
+        expect(mockSearchPosts).not.toHaveBeenCalled();
+    });
+
     it('검색어를 한 글자로 지워도 입력한 글자를 남긴다', async () => {
         renderWithProviders(<HomePage />);
         await screen.findByText('아직 작성된 글이 없습니다.');

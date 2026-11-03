@@ -94,3 +94,4 @@ API 요청·응답 타입의 원본은 tolelog-api 가 주석에서 생성하는
 
 - 백엔드 응답이 바뀌면 `npm run contract:sync` 를 실행한다. 형제 디렉터리 `../tolelog-api` 가 있으면 그 파일을, 없거나 `-- --remote` 를 주면 GitHub main 의 파일을 받는다. 바뀐 사본과 생성 파일을 함께 커밋한다.
 - 테스트(`scripts/__tests__/contract-types.test.ts`)가 생성 파일이 사본과 어긋나면 실패한다. 네트워크는 쓰지 않는다.
+- 폼이 검사하는 입력 한도(`src/utils/limits.ts` — 비밀번호 72바이트, 태그 50자, 검색어 2~100자 등)는 스펙의 값과 같아야 하고, 테스트가 이를 확인한다.
