@@ -21,7 +21,7 @@ function announceTokens(tokens: AuthTokens | null): void {
     window.dispatchEvent(new CustomEvent<AuthTokens | null>(AUTH_TOKENS_EVENT, { detail: tokens }));
 }
 
-function clearStoredSession(): void {
+export function clearStoredSession(): void {
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);

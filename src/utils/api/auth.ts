@@ -1,5 +1,4 @@
-import { STORAGE_KEYS } from '../constants';
-import { request } from './client';
+import { clearStoredSession, request } from './client';
 import type { SuccessResponse, AuthData, User } from '../../types';
 
 export const AUTH_API = {
@@ -26,9 +25,7 @@ export const AUTH_API = {
         } catch {
             // 무시
         } finally {
-            localStorage.removeItem(STORAGE_KEYS.TOKEN);
-            localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
-            localStorage.removeItem(STORAGE_KEYS.USER);
+            clearStoredSession();
         }
     },
 
