@@ -5,6 +5,7 @@ import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { makePost } from '../../test-utils/fixtures';
 import { POST_API, SERIES_API, TAG_API } from '../../utils/api';
 import { AUTO_SAVE_DELAY_MS, STORAGE_KEYS } from '../../utils/constants';
+import type { SuccessResponse } from '../../types';
 
 const mockNavigate = vi.fn();
 let mockUseParams: () => Record<string, string | undefined> = () => ({});
@@ -114,7 +115,7 @@ describe('EditorPage', () => {
     });
 
     it('저장 성공 시 toast.success 표시 후 /post/:id로 navigate', async () => {
-        mockCreatePost.mockResolvedValueOnce({ status: 'success', data: { id: 101 } } as any);
+        mockCreatePost.mockResolvedValueOnce({ status: 'success', data: { id: 101 } });
 
         // Render first with real timers so the component settles
         renderWithProviders(<EditorPage />, { authValue: { token: 'T', userId: 42 } });
@@ -152,7 +153,7 @@ describe('EditorPage', () => {
                 status: 'success',
                 data: makePost({ id: 5, title: '글', content: '본문', user_id: 42, series: { series_id: 3, series_title: 'C 언어 기초', series_order: 1 } }),
             });
-            mockUpdatePost.mockResolvedValueOnce({ status: 'success', data: { id: 5 } } as any);
+            mockUpdatePost.mockResolvedValueOnce({ status: 'success', data: { id: 5 } });
             renderWithProviders(<EditorPage />, { authValue: { token: 'T', userId: 42 } });
             await screen.findByDisplayValue('글');
             await waitFor(() => expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('3'));
@@ -214,7 +215,7 @@ describe('EditorPage', () => {
     });
 
     it('비공개 토글 후 저장 시 is_public=false가 전송된다', async () => {
-        mockCreatePost.mockResolvedValueOnce({ status: 'success', data: { id: 1 } } as any);
+        mockCreatePost.mockResolvedValueOnce({ status: 'success', data: { id: 1 } });
         renderWithProviders(<EditorPage />, { authValue: { token: 'T', userId: 42 } });
         const title = await screen.findByPlaceholderText(/제목/);
         fireEvent.change(title, { target: { value: '글' } });
@@ -306,7 +307,7 @@ describe('EditorPage', () => {
     });
 
     it('저장 성공 후 clearDraft로 localStorage draft가 비워진다', async () => {
-        mockCreatePost.mockResolvedValueOnce({ status: 'success', data: { id: 5 } } as any);
+        mockCreatePost.mockResolvedValueOnce({ status: 'success', data: { id: 5 } });
 
         // Render with real timers so component settles
         renderWithProviders(<EditorPage />, { authValue: { token: 'T', userId: 42 } });
@@ -341,9 +342,9 @@ describe('EditorPage 서버 자동저장과 발행', () => {
         mockUseParams = () => ({});
         mockGetUserSeries.mockResolvedValue({ status: 'success', data: [] });
         mockGetTags.mockResolvedValue({ status: 'success', data: [] });
-        mockUpdatePost.mockResolvedValue({ status: 'success', data: { id: 77 } } as any);
-        mockCreatePost.mockResolvedValue({ status: 'success', data: { id: 99 } } as any);
-        mockSaveDraft.mockResolvedValue({ status: 'success', data: { id: 77 } } as any);
+        mockUpdatePost.mockResolvedValue({ status: 'success', data: { id: 77 } });
+        mockCreatePost.mockResolvedValue({ status: 'success', data: { id: 99 } });
+        mockSaveDraft.mockResolvedValue({ status: 'success', data: { id: 77 } });
         localStorage.clear();
     });
 
@@ -368,7 +369,7 @@ describe('EditorPage 서버 자동저장과 발행', () => {
     }
 
     it('자동저장이 만든 draft 가 있으면 새 글을 만들지 않고 그 draft 를 발행한다', async () => {
-        mockCreateDraft.mockResolvedValue({ status: 'success', data: { id: 77 } } as any);
+        mockCreateDraft.mockResolvedValue({ status: 'success', data: { id: 77 } });
         await typeAndRunServerAutoSave('새 글');
         expect(mockCreateDraft).toHaveBeenCalledTimes(1);
 
@@ -379,8 +380,8 @@ describe('EditorPage 서버 자동저장과 발행', () => {
     });
 
     it('자동저장 요청이 진행 중일 때 발행하면 그 응답을 기다렸다가 같은 draft 를 발행한다', async () => {
-        let resolveDraft: (v: unknown) => void = () => {};
-        mockCreateDraft.mockReturnValue(new Promise(r => { resolveDraft = r; }) as any);
+        let resolveDraft: (v: SuccessResponse<{ id: number }>) => void = () => {};
+        mockCreateDraft.mockReturnValue(new Promise(r => { resolveDraft = r; }));
         await typeAndRunServerAutoSave('새 글');
 
         await act(async () => { clickPublish(); await vi.advanceTimersByTimeAsync(0); });
@@ -392,7 +393,7 @@ describe('EditorPage 서버 자동저장과 발행', () => {
     });
 
     it('발행 직전에 예약된 자동저장이 발행 후에 draft 로 되돌리지 않는다', async () => {
-        mockCreateDraft.mockResolvedValue({ status: 'success', data: { id: 77 } } as any);
+        mockCreateDraft.mockResolvedValue({ status: 'success', data: { id: 77 } });
         const titleInput = await typeAndRunServerAutoSave('새 글');
         fireEvent.change(titleInput, { target: { value: '고친 제목' } }); // 자동저장 타이머 재예약
 
