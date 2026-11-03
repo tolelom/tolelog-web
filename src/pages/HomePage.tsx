@@ -10,6 +10,7 @@ import Pager from '../components/Pager';
 import HomePostCard from '../components/home/HomePostCard';
 import { listSearchParams, parsePageParam, parsePostListPage } from '../utils/postList';
 import { BlogJsonLd } from '../components/StructuredData';
+import { useLatestRef } from '../hooks/useLatestRef';
 import './HomePage.css';
 
 const PAGE_SIZE = 10;
@@ -83,11 +84,12 @@ export default function HomePage() {
     const ownQueryRef = useRef(searchQuery);
     const searchTooShort = trimmedSearch.length > 0 && trimmedSearch.length < MIN_SEARCH_LENGTH;
 
+    const searchQueryRef = useLatestRef(searchQuery);
+
     useEffect(() => {
         const timer = setTimeout(() => {
-            const currentQ = searchParams.get('q') || '';
             const nextQ = trimmedSearch.length >= MIN_SEARCH_LENGTH ? trimmedSearch : '';
-            if (nextQ !== currentQ) {
+            if (nextQ !== searchQueryRef.current) {
                 ownQueryRef.current = nextQ;
                 setSearchParams(prev => {
                     const next = new URLSearchParams(prev);
@@ -102,15 +104,14 @@ export default function HomePage() {
             }
         }, SEARCH_DEBOUNCE_MS);
         return () => clearTimeout(timer);
-    }, [searchInput]);
+    }, [trimmedSearch, setSearchParams, searchQueryRef]);
 
     // 주소의 q 가 밖에서 바뀌면(뒤로 가기, 검색 지우기 등) 입력창을 맞춘다. 입력창이 바꾼 q 면 사용자가 친 그대로 둔다.
-    const urlQuery = searchParams.get('q') || '';
     useEffect(() => {
-        if (urlQuery === ownQueryRef.current) return;
-        ownQueryRef.current = urlQuery;
-        setSearchInput(urlQuery);
-    }, [urlQuery]);
+        if (searchQuery === ownQueryRef.current) return;
+        ownQueryRef.current = searchQuery;
+        setSearchInput(searchQuery);
+    }, [searchQuery]);
 
     const clearSearch = () => {
         setSearchInput('');
