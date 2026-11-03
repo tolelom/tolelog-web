@@ -15,6 +15,8 @@ import './HomePage.css';
 const PAGE_SIZE = 10;
 // 백엔드 검색은 두 글자 이상만 받는다.
 const MIN_SEARCH_LENGTH = 2;
+const SEARCH_DEBOUNCE_MS = 300;
+const POPULAR_TAG_COUNT = 15;
 
 export default function HomePage() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -32,12 +34,11 @@ export default function HomePage() {
     const [ownerProfile, setOwnerProfile] = useState<User | null>(null);
     const [popularTags, setPopularTags] = useState<TagInfo[]>([]);
 
-    // 페이지/태그/검색에 따라 SEO 메타를 계산
     const metaTitle = searchQuery
         ? `"${searchQuery}" 검색 결과`
         : tag
         ? `태그: ${tag}`
-        : undefined; // 홈 기본 = 사이트 이름만
+        : undefined;
     const metaDescription = searchQuery
         ? `"${searchQuery}"에 대한 글 검색 결과 — Tolelog`
         : tag
@@ -48,20 +49,20 @@ export default function HomePage() {
         : page > 1
         ? `/?page=${page}`
         : '/';
-    // 검색 결과는 색인 비대상 (중복 콘텐츠/저품질 위험)
+    // 검색 결과 페이지는 내용이 겹치고 얇아 색인하지 않는다.
     const noindex = !!searchQuery;
 
-    // 시리즈 목록 로드 (첫 페이지, 검색/태그 없을 때만)
+    const isPlainHome = page === 1 && !tag && !searchQuery;
+
     useEffect(() => {
-        if (page !== 1 || tag || searchQuery) { setSeriesList([]); return; }
+        if (!isPlainHome) { setSeriesList([]); return; }
         const controller = new AbortController();
         SERIES_API.getUserSeries(BLOG_OWNER_ID, { signal: controller.signal })
             .then(res => { if (res.status === 'success') setSeriesList(res.data || []); })
             .catch((err) => console.warn('home: failed to load series:', err));
         return () => controller.abort();
-    }, [page, tag, searchQuery]);
+    }, [isPlainHome]);
 
-    // 블로그 소유자 프로필 로드
     useEffect(() => {
         const controller = new AbortController();
         USER_API.getProfile(BLOG_OWNER_ID, { signal: controller.signal })
@@ -70,11 +71,10 @@ export default function HomePage() {
         return () => controller.abort();
     }, []);
 
-    // 인기 태그 로드
     useEffect(() => {
         const controller = new AbortController();
         TAG_API.getTags({ signal: controller.signal })
-            .then(res => { if (res.status === 'success') setPopularTags((res.data || []).slice(0, 15)); })
+            .then(res => { if (res.status === 'success') setPopularTags((res.data || []).slice(0, POPULAR_TAG_COUNT)); })
             .catch((err) => console.warn('home: failed to load tags:', err));
         return () => controller.abort();
     }, []);
@@ -83,7 +83,6 @@ export default function HomePage() {
     const ownQueryRef = useRef(searchQuery);
     const searchTooShort = trimmedSearch.length > 0 && trimmedSearch.length < MIN_SEARCH_LENGTH;
 
-    // Debounce search input into URL params
     useEffect(() => {
         const timer = setTimeout(() => {
             const currentQ = searchParams.get('q') || '';
@@ -101,7 +100,7 @@ export default function HomePage() {
                     return next;
                 });
             }
-        }, 300);
+        }, SEARCH_DEBOUNCE_MS);
         return () => clearTimeout(timer);
     }, [searchInput]);
 
@@ -162,9 +161,7 @@ export default function HomePage() {
                 canonical={canonicalPath}
                 noindex={noindex}
             />
-            {/* Blog 구조화 데이터는 기본 홈에서만 — 필터/검색 페이지는 제외 */}
-            {!tag && !searchQuery && page === 1 && <BlogJsonLd />}
-            {/* 미니 프로필 */}
+            {isPlainHome && <BlogJsonLd />}
             {ownerProfile && (
                 <div className="home-profile">
                     {ownerProfile.avatar_url ? (
@@ -191,7 +188,6 @@ export default function HomePage() {
                 </div>
             )}
 
-            {/* 인기 태그 */}
             {popularTags.length > 0 && !tag && !searchQuery && (
                 <div className="home-popular-tags">
                     <h2 className="home-popular-tags-heading">인기 태그</h2>
@@ -227,7 +223,6 @@ export default function HomePage() {
                 )}
             </div>
 
-            {/* 시리즈 섹션 */}
             {seriesList.length > 0 && (
                 <div className="home-series-section">
                     <h2 className="home-series-heading">시리즈</h2>

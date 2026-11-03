@@ -13,7 +13,6 @@ interface PreviewModalProps {
 export default function PreviewModal({ title, content, tags, onClose }: PreviewModalProps) {
     const contentRef = useRef<HTMLDivElement | null>(null);
 
-    // Escape 닫기
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
@@ -22,13 +21,11 @@ export default function PreviewModal({ title, content, tags, onClose }: PreviewM
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onClose]);
 
-    // 스크롤 잠금
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => { document.body.style.overflow = ''; };
     }, []);
 
-    // 코드 복사 버튼
     useCopyCodeBlock(contentRef);
 
     return (

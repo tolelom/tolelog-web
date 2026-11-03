@@ -6,13 +6,11 @@ import { notify as toast } from '../../utils/notify';
 import { Series } from '../../types';
 
 interface ProfileSeriesSectionProps {
-    /** 표시할 시리즈 목록 (소유는 부모 — 프로필 통계 표시에 공유됨) */
+    // 프로필 통계도 같은 목록을 보여 주므로 부모가 가진다.
     seriesList: Series[];
-    /** 본인 프로필 여부 — true일 때만 생성/수정/삭제 UI 노출 */
     isOwner: boolean;
     token: string | null;
     userId: string;
-    /** CRUD 성공 후 부모 목록 동기화 */
     onSeriesChange: (next: Series[]) => void;
 }
 
@@ -33,7 +31,7 @@ export default function ProfileSeriesSection({
         try {
             const res = await SERIES_API.getUserSeries(userId, { token });
             if (res.status === 'success') onSeriesChange(res.data || []);
-        } catch { /* ignore */ }
+        } catch { /* 방금 한 변경은 성공했으므로 목록 새로고침 실패는 넘어간다 */ }
     }, [userId, token, onSeriesChange]);
 
     const handleCreateSeries = async (title: string, description: string) => {
@@ -131,7 +129,6 @@ export default function ProfileSeriesSection({
                 )}
             </div>
 
-            {/* 시리즈 생성/수정 모달 */}
             {seriesModalOpen && (
                 <SeriesFormModal
                     onSubmit={handleCreateSeries}

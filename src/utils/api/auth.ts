@@ -18,12 +18,12 @@ export const AUTH_API = {
         });
     },
 
-    // 서버 에러여도 클라이언트 로그아웃은 진행한다. 진행 중에 토큰이 갱신돼 저장됐을 수 있어 끝나면 저장소를 비운다.
+    // 요청 중에 토큰이 갱신돼 다시 저장됐을 수 있어, 끝난 뒤에 저장소를 비운다.
     logout: async (token: string): Promise<void> => {
         try {
             await request('/api/v1/auth/logout', { method: 'POST', auth: 'required', token });
         } catch {
-            // 무시
+            // 서버가 실패해도 이 기기에서는 로그아웃한다.
         } finally {
             clearStoredSession();
         }

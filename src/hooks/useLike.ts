@@ -30,7 +30,6 @@ export function useLike(postId: string | undefined, token: string | null, initia
                 setLikeCount(res.data.like_count);
             }
         } catch (err: unknown) {
-            // 좋아요 토글 실패는 사용자 액션이므로 토스트로 알린다.
             notify.error(err instanceof Error ? err.message : '좋아요 처리에 실패했습니다.');
         } finally { setLikeLoading(false); }
     };

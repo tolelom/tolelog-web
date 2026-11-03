@@ -127,7 +127,6 @@ async function readBody<T>(response: Response, options: RequestOptions): Promise
     return response.json();
 }
 
-// path 는 API_BASE_URL 뒤에 붙는 경로다(예: /api/v1/posts).
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
     const auth = options.auth ?? 'none';
 
