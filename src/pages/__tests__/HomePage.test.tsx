@@ -170,6 +170,12 @@ describe('HomePage', () => {
         expect(screen.getByRole('button', { name: '다음 →' })).toBeDisabled();
     });
 
+    it('주소의 page 가 숫자가 아니면 첫 페이지를 부른다', async () => {
+        renderWithProviders(<HomePage />, { route: '/?page=abc' });
+        await waitFor(() => expect(mockGetPublicPosts).toHaveBeenCalled());
+        expect(mockGetPublicPosts).toHaveBeenCalledWith(1, 10, expect.anything());
+    });
+
     it('목록을 못 불러오면 오류를 보여 주고 다시 시도할 수 있다', async () => {
         mockGetPublicPosts.mockRejectedValueOnce(new Error('글 목록을 불러오지 못했습니다 (500)'));
         mockGetPublicPosts.mockResolvedValueOnce(listResponse([item({ title: '복구된 글' })]));

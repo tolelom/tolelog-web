@@ -10,7 +10,7 @@ import PageMeta from '../components/PageMeta';
 import Pager from '../components/Pager';
 import TagChip from '../components/TagChip';
 import { splitTags } from '../utils/tags';
-import { parsePostListPage } from '../utils/postList';
+import { parsePageParam, parsePostListPage } from '../utils/postList';
 import { BlogJsonLd } from '../components/StructuredData';
 import { postPath } from '../utils/slug';
 import './HomePage.css';
@@ -22,7 +22,7 @@ const MIN_SEARCH_LENGTH = 2;
 export default function HomePage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const page: number = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const page = parsePageParam(searchParams.get('page'));
     const tag: string = searchParams.get('tag') || '';
     const searchQuery: string = searchParams.get('q') || '';
     const [searchInput, setSearchInput] = useState(searchQuery);

@@ -17,3 +17,9 @@ export function parsePostListPage(
     const hasMore = pagination ? page < pagination.total_pages : posts.length === pageSize;
     return { posts, pagination, hasMore };
 }
+
+// 주소의 ?page= 를 읽는다. 없거나 숫자가 아니거나 1보다 작으면 첫 페이지다.
+export function parsePageParam(value: string | null): number {
+    const page = parseInt(value ?? '', 10);
+    return Number.isFinite(page) && page > 1 ? page : 1;
+}

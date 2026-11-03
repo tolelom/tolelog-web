@@ -7,7 +7,7 @@ import { resolveAssetUrl } from '../utils/assetUrl';
 import PageMeta from '../components/PageMeta';
 import { notify as toast } from '../utils/notify';
 import { User, PostListItem, Series } from '../types';
-import { parsePostListPage } from '../utils/postList';
+import { parsePageParam, parsePostListPage } from '../utils/postList';
 import { splitTags } from '../utils/tags';
 import ProfileSeriesSection from '../components/profile/ProfileSeriesSection';
 import ProfilePostList from '../components/profile/ProfilePostList';
@@ -28,7 +28,7 @@ export default function UserProfilePage() {
     const { userId: currentUserId, token, ready, setAvatarUrl: setGlobalAvatarUrl } = useContext(AuthContext);
     const tokenRef = useLatestRef(token);
     const [searchParams, setSearchParams] = useSearchParams();
-    const page: number = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const page = parsePageParam(searchParams.get('page'));
     const tag: string = searchParams.get('tag') || '';
     const [profile, setProfile] = useState<User | null>(null);
     const [posts, setPosts] = useState<PostListItem[]>([]);
