@@ -13,6 +13,7 @@ import { useLike } from '../hooks/useLike';
 import { useCopyCodeBlock } from '../hooks/useCopyCodeBlock';
 import { useReturnFocus } from '../hooks/useReturnFocus';
 import { useKatexReady } from '../hooks/useKatexReady';
+import { useLatestRef } from '../hooks/useLatestRef';
 import { useToast } from '../hooks/useToast';
 import CommentSection from '../components/CommentSection';
 import PageMeta from '../components/PageMeta';
@@ -51,6 +52,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
     const navigate = useNavigate();
     const location = useLocation();
     const { userId, token, ready } = useContext(AuthContext);
+    const tokenRef = useLatestRef(token);
     const prerenderedMeta = useLoaderData() as PostListItem | null | undefined;
     const [post, setPost] = useState<Post | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -81,7 +83,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
     // 코드 블록 복사 버튼 이벤트 위임
     useCopyCodeBlock(contentRef, !!post);
 
-    // 글 로드
+    // 토큰이 갱신돼도 보는 사람이 같으면 다시 부르지 않는다(조회수·스크롤·댓글 입력 유지).
     useEffect(() => {
         if (!ready) return;
         if (!numericId) {
@@ -93,7 +95,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
         const loadPost = async () => {
             try {
                 setIsLoading(true);
-                const response = await POST_API.getPost(numericId, { signal: controller.signal, token: token ?? undefined });
+                const response = await POST_API.getPost(numericId, { signal: controller.signal, token: tokenRef.current ?? undefined });
                 if (response.status === 'success') {
                     setPost(response.data);
                 } else {
@@ -108,7 +110,7 @@ function PostDetail({ numericId }: { numericId: string | undefined }) {
         };
         loadPost();
         return () => controller.abort();
-    }, [numericId, token, ready]);
+    }, [numericId, userId, ready, tokenRef]);
 
     // canonical URL 로 자동 정규화: /post/123 또는 슬러그가 어긋난 URL 이면
     // canonical 슬러그 URL 로 history.replaceState 해서 주소창만 정리한다 (실제 네비게이션 없음).
