@@ -103,4 +103,47 @@ describe('BlockEditor', () => {
         rerender(<Harness content="# 복구한 제목" onChange={onChange} />);
         expect(container.querySelector('textarea')).toHaveValue('# 복구한 제목');
     });
+
+    function activateFirstBlock(container: HTMLElement): HTMLTextAreaElement {
+        fireEvent.click(container.querySelector('.block-rendered') as HTMLElement);
+        return container.querySelector('textarea') as HTMLTextAreaElement;
+    }
+
+    it('Ctrl+B 로 커서 자리에 굵게 표시를 넣는다', () => {
+        const onChange = vi.fn();
+        const { container } = render(<Harness content="hi" onChange={onChange} />);
+        const ta = activateFirstBlock(container);
+        ta.setSelectionRange(2, 2);
+        fireEvent.keyDown(ta, { key: 'b', ctrlKey: true });
+        expect(onChange).toHaveBeenLastCalledWith('hi****');
+    });
+
+    it('블록 맨 앞에서 Backspace 를 누르면 앞 블록과 합친다', () => {
+        const onChange = vi.fn();
+        const { container } = render(<Harness content={'one\n\ntwo'} onChange={onChange} />);
+        fireEvent.click(container.querySelectorAll('.block-rendered')[1] as HTMLElement);
+        const ta = container.querySelector('textarea') as HTMLTextAreaElement;
+        ta.setSelectionRange(0, 0);
+        fireEvent.keyDown(ta, { key: 'Backspace' });
+        expect(onChange).toHaveBeenLastCalledWith('onetwo');
+    });
+
+    it('코드 블록 끝의 빈 줄에서 Enter 를 누르면 빈 줄을 지우고 새 블록으로 나간다', () => {
+        const onChange = vi.fn();
+        const { container } = render(<Harness content="x" onChange={onChange} />);
+        const ta = activateFirstBlock(container);
+        fireEvent.change(ta, { target: { value: '```js\ncode\n' } });
+        ta.setSelectionRange(ta.value.length, ta.value.length);
+        fireEvent.keyDown(ta, { key: 'Enter' });
+        expect(onChange).toHaveBeenLastCalledWith('```js\ncode\n\n');
+    });
+
+    it('이미지 크기 조절 손잡이에서 화살표로 5%씩 줄인다', () => {
+        const onChange = vi.fn();
+        const { container, getByRole } = render(<Harness content="![x](/a.png){width=50%}" onChange={onChange} />);
+        fireEvent.click(container.querySelector('.block-rendered') as HTMLElement);
+        fireEvent.keyDown(getByRole('slider', { name: '이미지 크기 조절' }), { key: 'ArrowLeft' });
+        expect(onChange).toHaveBeenLastCalledWith('![x](/a.png){width=45%}');
+    });
 });
+
