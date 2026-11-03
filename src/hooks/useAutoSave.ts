@@ -2,7 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { STORAGE_KEYS, AUTO_SAVE_DELAY_MS } from '../utils/constants';
 import { notify } from '../utils/notify';
 import { captureException } from '../utils/errorReporting';
+import { formatTimeAgo } from '../utils/format';
 import type { PostFormData, DraftData } from '../types';
+
+const SERVER_SAVE_DELAY_MS = 5000;
 
 export type SaveStatus = 'saved' | 'saving' | 'error';
 
@@ -54,7 +57,7 @@ export function useAutoSave(
         }
     }, [storageKey]);
 
-    // localStorage auto-save. 불러온 내용 그대로면(고친 게 없으면) 저장하지 않는다.
+    // 불러온 내용 그대로면(고친 게 없으면) 임시저장하지 않는다.
     useEffect(() => {
         if (baseline && sameForm(formData, baseline)) return;
         setSaveStatus('saving');
@@ -74,7 +77,6 @@ export function useAutoSave(
         };
     }, [formData, saveDraft, baseline]);
 
-    // server save side effect
     useEffect(() => {
         if (!serverSave?.enabled) return;
 
@@ -92,7 +94,7 @@ export function useAutoSave(
                     hasNotifiedFailureRef.current = true;
                 }
             }
-        }, serverSave.delay ?? 5000);
+        }, serverSave.delay ?? SERVER_SAVE_DELAY_MS);
 
         return () => {
             if (serverSaveTimeoutRef.current) {
@@ -135,25 +137,7 @@ export function useAutoSave(
 
     const getFormattedSaveTime = (): string => {
         const draft = loadDraft();
-        if (!draft || !draft.savedAt) return '';
-
-        const date = new Date(draft.savedAt);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-
-        if (diffMins < 1) {
-            return '방금 전';
-        } else if (diffMins < 60) {
-            return `${diffMins}분 전`;
-        } else {
-            const diffHours = Math.floor(diffMins / 60);
-            if (diffHours < 24) {
-                return `${diffHours}시간 전`;
-            } else {
-                return `${Math.floor(diffHours / 24)}일 전`;
-            }
-        }
+        return draft?.savedAt ? formatTimeAgo(draft.savedAt) : '';
     };
 
     return {
