@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import { POST_API, SERIES_API } from '../utils/api';
 import { STORAGE_KEYS } from '../utils/constants';
 import { invalidateCache } from '../utils/apiCache';
+import { postLimitError } from '../utils/postValidation';
 import { useAutoSave, type SaveStatus } from '../hooks/useAutoSave';
 import { useToast } from '../hooks/useToast';
 import { useReturnFocus } from '../hooks/useReturnFocus';
@@ -210,6 +211,11 @@ function PostEditor({ postId }: { postId: string | undefined }) {
             setError('내용을 입력해주세요');
             return;
         }
+        const limitError = postLimitError(formData);
+        if (limitError) {
+            setError(limitError);
+            return;
+        }
         if (!token) {
             setError('로그인이 필요합니다');
             navigate('/login');
@@ -277,6 +283,11 @@ function PostEditor({ postId }: { postId: string | undefined }) {
         if (!postId) return;
         if (!formData.content.trim()) {
             setError('내용을 입력해주세요');
+            return;
+        }
+        const limitError = postLimitError(formData);
+        if (limitError) {
+            setError(limitError);
             return;
         }
         if (!token) {
