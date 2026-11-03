@@ -1,8 +1,9 @@
 import ImageUploadButton from './ImageUploadButton';
+import type { FormatType } from './editorFormats';
 
 interface EditorToolbarProps {
-    onFormat: (type: string) => void;
-    onImageInsert: (base64Data: string, fileName: string) => void;
+    onFormat: (type: FormatType) => void;
+    onImageInsert: (url: string, fileName: string) => void;
     onPreview: () => void;
     previewDisabled: boolean;
 }
