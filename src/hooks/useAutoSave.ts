@@ -34,9 +34,6 @@ export function useAutoSave(
     baseline?: PostFormData
 ): UseAutoSaveReturn {
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
-    const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const serverSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const lastSavedRef = useRef<DraftData | null>(null);
     const hasNotifiedFailureRef = useRef(false);
 
     const saveDraft = useCallback((data: PostFormData) => {
@@ -49,7 +46,6 @@ export function useAutoSave(
                 savedAt: new Date().toISOString(),
             };
             localStorage.setItem(storageKey, JSON.stringify(draftData));
-            lastSavedRef.current = draftData;
             setSaveStatus('saved');
         } catch (error) {
             captureException(error, { source: 'useAutoSave.save' });
@@ -61,32 +57,20 @@ export function useAutoSave(
     useEffect(() => {
         if (baseline && sameForm(formData, baseline)) return;
         setSaveStatus('saving');
-
-        if (saveTimeoutRef.current) {
-            clearTimeout(saveTimeoutRef.current);
-        }
-
-        saveTimeoutRef.current = setTimeout(() => {
-            saveDraft(formData);
-        }, AUTO_SAVE_DELAY_MS);
-
-        return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-            }
-        };
+        const timeoutId = setTimeout(() => saveDraft(formData), AUTO_SAVE_DELAY_MS);
+        return () => clearTimeout(timeoutId);
     }, [formData, saveDraft, baseline]);
 
+    const serverSaveEnabled = serverSave?.enabled ?? false;
+    const serverSaveDelay = serverSave?.delay ?? SERVER_SAVE_DELAY_MS;
+    const onServerSave = serverSave?.onSave;
+
     useEffect(() => {
-        if (!serverSave?.enabled) return;
+        if (!serverSaveEnabled || !onServerSave) return;
 
-        if (serverSaveTimeoutRef.current) {
-            clearTimeout(serverSaveTimeoutRef.current);
-        }
-
-        serverSaveTimeoutRef.current = setTimeout(async () => {
+        const timeoutId = setTimeout(async () => {
             try {
-                await serverSave.onSave(formData);
+                await onServerSave(formData);
                 hasNotifiedFailureRef.current = false;
             } catch {
                 if (!hasNotifiedFailureRef.current) {
@@ -94,14 +78,10 @@ export function useAutoSave(
                     hasNotifiedFailureRef.current = true;
                 }
             }
-        }, serverSave.delay ?? SERVER_SAVE_DELAY_MS);
+        }, serverSaveDelay);
 
-        return () => {
-            if (serverSaveTimeoutRef.current) {
-                clearTimeout(serverSaveTimeoutRef.current);
-            }
-        };
-    }, [formData, serverSave?.enabled, serverSave?.delay, serverSave?.onSave]);
+        return () => clearTimeout(timeoutId);
+    }, [formData, serverSaveEnabled, serverSaveDelay, onServerSave]);
 
     const loadDraft = useCallback((): DraftData | null => {
         try {
@@ -119,7 +99,6 @@ export function useAutoSave(
     const clearDraft = useCallback(() => {
         try {
             localStorage.removeItem(storageKey);
-            lastSavedRef.current = null;
             setSaveStatus('saved');
         } catch (error) {
             captureException(error, { source: 'useAutoSave.clear' });
