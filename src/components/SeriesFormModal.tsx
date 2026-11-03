@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Series } from '../types';
 import { useReturnFocus } from '../hooks/useReturnFocus';
+import { useModalKeyboard } from '../hooks/useModalKeyboard';
 import './SeriesFormModal.css';
 
 interface SeriesFormModalProps {
@@ -18,39 +19,14 @@ export default function SeriesFormModal({ series, onSubmit, onClose }: SeriesFor
     const titleRef = useRef<HTMLInputElement>(null);
     const modalRef = useRef<HTMLDivElement>(null);
 
-    // 모달 닫을 때 트리거 버튼으로 포커스 복원 (titleRef.focus()가 호출되기 전에 캡처)
+    // 제목 칸에 포커스를 주기 전에 불러야 여는 버튼을 기억한다.
     useReturnFocus(true);
 
     useEffect(() => {
         titleRef.current?.focus();
     }, []);
 
-    // Escape 닫기 + 포커스 트랩
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                onClose();
-                return;
-            }
-            if (e.key === 'Tab' && modalRef.current) {
-                const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-                    'input:not(:disabled), textarea:not(:disabled), button:not(:disabled)'
-                );
-                if (focusable.length === 0) return;
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
-                if (e.shiftKey && document.activeElement === first) {
-                    e.preventDefault();
-                    last.focus();
-                } else if (!e.shiftKey && document.activeElement === last) {
-                    e.preventDefault();
-                    first.focus();
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClose]);
+    useModalKeyboard(modalRef, onClose, 'input:not(:disabled), textarea:not(:disabled), button:not(:disabled)');
 
     const handleSubmit = async () => {
         const trimmedTitle = title.trim();
