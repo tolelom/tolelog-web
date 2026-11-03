@@ -4,7 +4,7 @@ import { notify as toast } from '../lib/notify';
 import { AuthContext } from '../context/AuthContext';
 import { AUTH_API } from '../lib/api';
 import PageMeta from '../components/PageMeta';
-import { isPasswordTooLong, PASSWORD_TOO_LONG_MESSAGE } from '../components/authValidation';
+import { isPasswordTooLong, PASSWORD_TOO_LONG_MESSAGE } from '../features/auth/validation';
 import { charCount, PASSWORD_MIN } from '../lib/api/limits';
 import './SettingsPage.css';
 
