@@ -9,7 +9,6 @@ export function parseInlineWithRefs(text: string, refs: Set<string>): string {
     let i = 0;
 
     while (i < text.length) {
-        // 이미지: ![alt](url) 또는 ![alt](url){width=50%}
         if (text[i] === '!' && text[i + 1] === '[') {
             const altEnd = text.indexOf(']', i + 2);
             if (altEnd !== -1 && text[altEnd + 1] === '(') {
@@ -31,7 +30,6 @@ export function parseInlineWithRefs(text: string, refs: Set<string>): string {
             }
         }
 
-        // 각주 참조: [^id]
         if (text[i] === '[' && text[i + 1] === '^') {
             const end = text.indexOf(']', i + 2);
             if (end !== -1 && text[end + 1] !== ':') {
@@ -45,7 +43,6 @@ export function parseInlineWithRefs(text: string, refs: Set<string>): string {
             }
         }
 
-        // 링크: [text](url)
         if (text[i] === '[') {
             const labelEnd = text.indexOf(']', i + 1);
             if (labelEnd !== -1 && text[labelEnd + 1] === '(') {
@@ -60,7 +57,6 @@ export function parseInlineWithRefs(text: string, refs: Set<string>): string {
             }
         }
 
-        // 인라인 코드: `code`
         if (text[i] === '`') {
             const end = text.indexOf('`', i + 1);
             if (end !== -1) {
@@ -71,7 +67,6 @@ export function parseInlineWithRefs(text: string, refs: Set<string>): string {
             }
         }
 
-        // 인라인 수식: $...$  ($$로 시작하지 않는 경우)
         if (text[i] === '$' && text[i + 1] !== '$') {
             const end = text.indexOf('$', i + 1);
             if (end !== -1 && end > i + 1) {
@@ -82,7 +77,6 @@ export function parseInlineWithRefs(text: string, refs: Set<string>): string {
             }
         }
 
-        // 볼드: **text**
         if (text[i] === '*' && text[i + 1] === '*') {
             const end = text.indexOf('**', i + 2);
             if (end !== -1) {
@@ -93,7 +87,6 @@ export function parseInlineWithRefs(text: string, refs: Set<string>): string {
             }
         }
 
-        // 이탤릭: *text*
         if (text[i] === '*' && text[i + 1] !== '*') {
             const end = text.indexOf('*', i + 1);
             if (end !== -1 && end > i + 1) {
@@ -104,7 +97,6 @@ export function parseInlineWithRefs(text: string, refs: Set<string>): string {
             }
         }
 
-        // 취소선: ~~text~~
         if (text[i] === '~' && text[i + 1] === '~') {
             const end = text.indexOf('~~', i + 2);
             if (end !== -1) {
@@ -115,7 +107,6 @@ export function parseInlineWithRefs(text: string, refs: Set<string>): string {
             }
         }
 
-        // 줄바꿈
         if (text[i] === '\n') {
             result += '<br>';
             i++;

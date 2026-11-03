@@ -71,7 +71,7 @@ function renderBlockWithRefs(block: Block, refs: Set<string>): string {
         }
 
         case 'footnote_def':
-            return ''; // renderMarkdown에서 별도 처리
+            return ''; // 본문 끝의 각주 목록으로 모아 그린다.
 
         default:
             return `<p>${inline((block as Block).raw || '')}</p>`;
@@ -95,7 +95,6 @@ export function renderMarkdown(text: string): string {
         const blocks = parseBlocks(text);
         let html = blocks.map(b => renderBlockWithRefs(b, refs)).join('\n');
 
-        // 각주 정의 수집
         const footnoteDefs = blocks.filter((b): b is FootnoteDefBlock => b.type === 'footnote_def');
         if (footnoteDefs.length > 0) {
             html += '<section class="footnotes"><hr><ol class="footnote-list">';
@@ -107,10 +106,10 @@ export function renderMarkdown(text: string): string {
             html += '</ol></section>';
         }
 
+        // 위 렌더러는 이스케이프만 하므로 javascript: 링크나 속성 주입은 여기서 걸러진다.
         return DOMPurify.sanitize(html);
     } catch (err) {
-        // markdownParser 는 errorReporting 을 직접 의존하지 않는다 (순환 회피 + 가벼움).
-        // 마크다운 렌더링 오류는 사용자 콘텐츠 문제일 가능성이 커서 외부 리포팅 가치가 낮음.
+        // 사용자 콘텐츠 탓인 경우가 대부분이라 Sentry 로 보내지 않는다.
         if (typeof console !== 'undefined') console.warn('Markdown rendering error:', err);
         return '<p class="error-preview">마크다운 렌더링 오류</p>';
     }
