@@ -10,10 +10,6 @@
     background-color: var(--error-bg); color: var(--error-text); padding: 12px 16px; border-radius: 4px;
     margin-bottom: 16px; border-left: 4px solid var(--error-border);
 }
-.success-message {
-    background-color: var(--success-bg); color: var(--success-text); padding: 12px 16px; border-radius: 4px;
-    margin-bottom: 16px; border-left: 4px solid var(--success-border);
-}
 
 .restore-prompt {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-overlay);

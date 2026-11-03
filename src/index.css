@@ -322,16 +322,6 @@ select:focus {
   margin-bottom: 16px;
 }
 
-.spinner-sm {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--border-light);
-  border-top-color: var(--text-secondary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 12px;
-}
-
 /* ─── 공통 태그 칩 ─── */
 .tag-chip {
   display: inline-block;
@@ -408,8 +398,6 @@ button.tag-chip-btn {
 .skeleton-meta-row { display: flex; gap: 8px; margin-bottom: 8px; }
 .skeleton-stats-row { display: flex; justify-content: center; gap: 32px; }
 
-/* 스켈레톤 너비 유틸리티 */
-.skeleton-w-25 { width: 25%; }
 .skeleton-w-40 { width: 40px; }
 .skeleton-w-50 { width: 50px; }
 .skeleton-w-60 { width: 60px; }

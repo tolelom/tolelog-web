@@ -94,15 +94,6 @@
     margin-bottom: 12px;
 }
 
-/* ═══ 시리즈 관리 (헤더 내 관리 버튼 바) ═══ */
-
-.series-manage-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 12px;
-}
-
 /* ═══ 글 항목 내 관리 버튼 그룹 ═══ */
 
 .series-post-actions {
@@ -184,9 +175,5 @@
 @media (max-width: 480px) {
     .series-post-actions {
         gap: 4px;
-    }
-
-    .series-manage-bar {
-        flex-wrap: wrap;
     }
 }

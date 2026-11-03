@@ -4,57 +4,6 @@
     padding: 40px 20px;
 }
 
-.home-header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.home-title {
-    margin: 0;
-}
-
-/* 액션 영역 (로그인/로그아웃/글쓰기) */
-.home-actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 40px;
-    font-size: 14px;
-}
-
-.home-user {
-    color: var(--text-secondary);
-}
-
-.home-sep {
-    color: var(--text-muted);
-    user-select: none;
-}
-
-.home-nav-link {
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-weight: 400;
-    transition: color 0.2s;
-}
-
-.home-nav-link:hover {
-    color: var(--text-primary);
-}
-
-.home-logout-btn {
-    background: none;
-    border: none;
-    padding: 0;
-    font-size: inherit;
-    font-family: inherit;
-    cursor: pointer;
-}
-
 /* 로딩/에러/빈 상태 */
 .home-status {
     text-align: center;
@@ -450,16 +399,6 @@
 @media (max-width: 480px) {
     .home-page {
         padding: 20px 12px;
-    }
-
-    .home-title {
-        font-size: 22px;
-    }
-
-    .home-actions {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 4px;
     }
 
     .home-post-card {
