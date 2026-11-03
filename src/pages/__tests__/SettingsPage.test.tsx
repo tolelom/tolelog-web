@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import SettingsPage from '../SettingsPage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
-import { AUTH_API } from '../../utils/api';
+import { AUTH_API } from '../../lib/api';
+import { PASSWORD_TOO_LONG_MESSAGE } from '../../features/auth/validation';
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     AUTH_API: { changePassword: vi.fn(), deleteAccount: vi.fn() },
 }));
 
@@ -14,10 +15,10 @@ vi.mock('vite-react-ssg', () => ({
 
 const mockChangePassword = vi.mocked(AUTH_API.changePassword);
 
-function submitPasswordChange() {
+function submitPasswordChange(newPassword = 'new-pass-1') {
     fireEvent.change(screen.getByLabelText('현재 비밀번호'), { target: { value: 'old-pass-1' } });
-    fireEvent.change(screen.getByLabelText('새 비밀번호'), { target: { value: 'new-pass-1' } });
-    fireEvent.change(screen.getByLabelText('비밀번호 확인'), { target: { value: 'new-pass-1' } });
+    fireEvent.change(screen.getByLabelText('새 비밀번호'), { target: { value: newPassword } });
+    fireEvent.change(screen.getByLabelText('비밀번호 확인'), { target: { value: newPassword } });
     fireEvent.click(screen.getByRole('button', { name: '비밀번호 변경' }));
 }
 
@@ -66,5 +67,14 @@ describe('SettingsPage 비밀번호 변경', () => {
 
         expect(await screen.findAllByText('현재 비밀번호가 올바르지 않습니다')).not.toHaveLength(0);
         expect(login).not.toHaveBeenCalled();
+    });
+
+    it('서버가 받지 않는 72바이트 넘는 새 비밀번호는 보내지 않는다', async () => {
+        renderWithProviders(<SettingsPage />, { authValue: { token: 'old-access', username: 'alice', userId: 7 } });
+
+        submitPasswordChange('비밀번호'.repeat(7));
+
+        expect(await screen.findByText(PASSWORD_TOO_LONG_MESSAGE)).toBeInTheDocument();
+        expect(mockChangePassword).not.toHaveBeenCalled();
     });
 });

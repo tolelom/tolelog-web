@@ -1,21 +1,21 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { POST_API, SERIES_API, TAG_API, USER_API } from '../utils/api';
-import { BLOG_OWNER_ID } from '../utils/constants';
-import { resolveAssetUrl } from '../utils/assetUrl';
-import { cachedFetch } from '../utils/apiCache';
+import { POST_API, SERIES_API, TAG_API, USER_API } from '../lib/api';
+import { BLOG_OWNER_ID } from '../lib/constants';
+import { resolveAssetUrl } from '../lib/assetUrl';
+import { cachedFetch } from '../lib/api/cache';
+import { charCount, SEARCH_QUERY_MAX, SEARCH_QUERY_MIN } from '../lib/api/limits';
 import { PostListItem, Series, User, TagInfo } from '../types';
 import PageMeta from '../components/PageMeta';
 import Pager from '../components/Pager';
 import HomePostCard from '../components/home/HomePostCard';
-import { listSearchParams, parsePageParam, parsePostListPage } from '../utils/postList';
+import { listSearchParams, parsePageParam, parsePostListPage } from '../features/posts/list';
 import { BlogJsonLd } from '../components/StructuredData';
 import { useLatestRef } from '../hooks/useLatestRef';
 import './HomePage.css';
 
 const PAGE_SIZE = 10;
 // 백엔드 검색은 두 글자 이상만 받는다.
-const MIN_SEARCH_LENGTH = 2;
 const SEARCH_DEBOUNCE_MS = 300;
 const POPULAR_TAG_COUNT = 15;
 
@@ -82,13 +82,17 @@ export default function HomePage() {
 
     const trimmedSearch = searchInput.trim();
     const ownQueryRef = useRef(searchQuery);
-    const searchTooShort = trimmedSearch.length > 0 && trimmedSearch.length < MIN_SEARCH_LENGTH;
+    const searchLength = charCount(trimmedSearch);
+    const searchTooShort = searchLength > 0 && searchLength < SEARCH_QUERY_MIN;
+    const searchTooLong = searchLength > SEARCH_QUERY_MAX;
 
     const searchQueryRef = useLatestRef(searchQuery);
 
     useEffect(() => {
+        const length = charCount(trimmedSearch);
+        if (length > SEARCH_QUERY_MAX) return;
         const timer = setTimeout(() => {
-            const nextQ = trimmedSearch.length >= MIN_SEARCH_LENGTH ? trimmedSearch : '';
+            const nextQ = length >= SEARCH_QUERY_MIN ? trimmedSearch : '';
             if (nextQ !== searchQueryRef.current) {
                 ownQueryRef.current = nextQ;
                 setSearchParams(prev => {
@@ -218,6 +222,9 @@ export default function HomePage() {
                 />
                 {searchTooShort && (
                     <p className="home-search-hint">두 글자 이상 입력해 주세요.</p>
+                )}
+                {searchTooLong && (
+                    <p className="home-search-hint">{SEARCH_QUERY_MAX}자 이하로 입력해 주세요.</p>
                 )}
                 {searchInput && (
                     <button className="home-search-clear" onClick={clearSearch} aria-label="검색어 지우기">×</button>

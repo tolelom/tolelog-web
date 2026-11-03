@@ -2,11 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import HomePage from '../HomePage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
-import { POST_API, SERIES_API, TAG_API, USER_API } from '../../utils/api';
-import { clearCache } from '../../utils/apiCache';
+import { POST_API, SERIES_API, TAG_API, USER_API } from '../../lib/api';
+import { clearCache } from '../../lib/api/cache';
 import type { PostListItem } from '../../types';
+import { makePostListItem } from '../../test-utils/fixtures';
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     POST_API: { getPublicPosts: vi.fn(), searchPosts: vi.fn() },
     SERIES_API: { getUserSeries: vi.fn() },
     TAG_API: { getTags: vi.fn() },
@@ -23,21 +24,7 @@ const mockGetUserSeries = vi.mocked(SERIES_API.getUserSeries);
 const mockGetTags = vi.mocked(TAG_API.getTags);
 const mockGetProfile = vi.mocked(USER_API.getProfile);
 
-function item(overrides: Partial<PostListItem> = {}): PostListItem {
-    return {
-        id: 1,
-        title: '첫 글',
-        user_id: 1,
-        author: 'tolelom',
-        is_public: true,
-        tags: '',
-        view_count: 0,
-        like_count: 0,
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
-        ...overrides,
-    };
-}
+const item = makePostListItem;
 
 function listResponse(posts: PostListItem[], page = 1, totalPages = 1) {
     return {
@@ -140,6 +127,17 @@ describe('HomePage', () => {
         await new Promise(r => setTimeout(r, 500));
         expect(mockSearchPosts).not.toHaveBeenCalled();
         expect(screen.queryByText(/오류가 발생했습니다/)).not.toBeInTheDocument();
+    });
+
+    it('서버가 받지 않는 100자 넘는 검색어는 보내지 않고 알린다', async () => {
+        renderWithProviders(<HomePage />);
+        await screen.findByText('아직 작성된 글이 없습니다.');
+
+        fireEvent.change(screen.getByPlaceholderText('글 검색...'), { target: { value: '가'.repeat(101) } });
+
+        expect(await screen.findByText('100자 이하로 입력해 주세요.')).toBeInTheDocument();
+        await new Promise(r => setTimeout(r, 500));
+        expect(mockSearchPosts).not.toHaveBeenCalled();
     });
 
     it('검색어를 한 글자로 지워도 입력한 글자를 남긴다', async () => {

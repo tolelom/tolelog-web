@@ -1,12 +1,12 @@
 import { useState, useEffect, useContext, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { SERIES_API } from '../utils/api';
-import { formatDateShort } from '../utils/format';
+import { SERIES_API } from '../lib/api';
+import { formatDateShort } from '../lib/format';
 import { SeriesDetail } from '../types';
 import PageMeta from '../components/PageMeta';
 import { BreadcrumbJsonLd } from '../components/StructuredData';
-import { postPath } from '../utils/slug';
+import { postPath } from '../features/posts/slug';
 import { useLatestRef } from '../hooks/useLatestRef';
 import './SeriesDetailPage.css';
 

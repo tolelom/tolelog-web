@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { STORAGE_KEYS, AUTO_SAVE_DELAY_MS } from '../utils/constants';
-import { notify } from '../utils/notify';
-import { captureException } from '../utils/errorReporting';
-import { formatTimeAgo } from '../utils/format';
+import { STORAGE_KEYS, AUTO_SAVE_DELAY_MS } from '../lib/constants';
+import { notify } from '../lib/notify';
+import { captureException } from '../lib/errorReporting';
+import { formatTimeAgo } from '../lib/format';
 import type { PostFormData, DraftData } from '../types';
 
 const SERVER_SAVE_DELAY_MS = 5000;

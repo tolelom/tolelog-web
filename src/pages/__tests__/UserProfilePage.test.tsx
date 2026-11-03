@@ -2,17 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import UserProfilePage from '../UserProfilePage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
-import { USER_API, POST_API, SERIES_API } from '../../utils/api';
-import { compressImage, validateImageFile } from '../../utils/imageUpload';
+import { USER_API, POST_API, SERIES_API } from '../../lib/api';
+import { compressImage, validateImageFile } from '../../features/images/imageUpload';
 import type { PostListItem, Series } from '../../types';
+import { makePostListItem } from '../../test-utils/fixtures';
 
-vi.mock('../../utils/api', () => ({
+vi.mock('../../lib/api', () => ({
     USER_API: { getProfile: vi.fn(), uploadAvatar: vi.fn() },
     POST_API: { getUserPosts: vi.fn() },
     SERIES_API: { getUserSeries: vi.fn(), deleteSeries: vi.fn() },
 }));
 
-vi.mock('../../utils/imageUpload', () => ({
+vi.mock('../../features/images/imageUpload', () => ({
     validateImageFile: vi.fn(),
     compressImage: vi.fn(),
 }));
@@ -29,13 +30,7 @@ const mockDeleteSeries = vi.mocked(SERIES_API.deleteSeries);
 const mockValidate = vi.mocked(validateImageFile);
 const mockCompress = vi.mocked(compressImage);
 
-function item(overrides: Partial<PostListItem> = {}): PostListItem {
-    return {
-        id: 1, title: '첫 글', user_id: 1, author: 'tolelom', is_public: true, tags: '',
-        view_count: 0, like_count: 0, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z',
-        ...overrides,
-    };
-}
+const item = makePostListItem;
 
 const cSeries: Series = { id: 2, title: 'C 언어 기초', description: '', user_id: 1, author: 'tolelom', post_count: 11, created_at: '', updated_at: '' };
 

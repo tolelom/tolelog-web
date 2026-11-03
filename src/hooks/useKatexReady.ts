@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { isKatexReady, subscribeKatexReady } from '../utils/markdownParser';
+import { isKatexReady, subscribeKatexReady } from '../features/markdown';
 
 // KaTeX 가 로드되면 값이 바뀐다. renderMarkdown 을 memo 하는 쪽은 이 값을 의존성에 넣는다.
 export function useKatexReady(): number {

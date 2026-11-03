@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { ThemeContext, type Theme } from './ThemeContext';
-import { STORAGE_KEYS } from '../utils/constants';
+import { STORAGE_KEYS } from '../lib/constants';
 
 const isBrowser = typeof window !== 'undefined';
 

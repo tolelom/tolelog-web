@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { Series } from '../types';
 import { useReturnFocus } from '../hooks/useReturnFocus';
 import { useModalKeyboard } from '../hooks/useModalKeyboard';
+import { SERIES_DESCRIPTION_MAX, SERIES_TITLE_MAX } from '../lib/api/limits';
 import './SeriesFormModal.css';
 
 interface SeriesFormModalProps {
@@ -61,7 +62,7 @@ export default function SeriesFormModal({ series, onSubmit, onClose }: SeriesFor
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder="시리즈 제목"
-                        maxLength={100}
+                        maxLength={SERIES_TITLE_MAX}
                         disabled={isSubmitting}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit(); }}
                     />
@@ -75,7 +76,7 @@ export default function SeriesFormModal({ series, onSubmit, onClose }: SeriesFor
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="시리즈에 대한 간단한 설명 (선택)"
-                        maxLength={500}
+                        maxLength={SERIES_DESCRIPTION_MAX}
                         rows={3}
                         disabled={isSubmitting}
                     />

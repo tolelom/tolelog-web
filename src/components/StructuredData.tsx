@@ -1,6 +1,6 @@
 import { Head as Helmet } from 'vite-react-ssg';
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '../utils/constants';
-import { absoluteSiteUrl } from '../utils/siteUrl';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '../lib/constants';
+import { absoluteSiteUrl } from '../lib/siteUrl';
 
 function jsonLd(data: object): string {
     // 제목에 </script> 가 들어 있어도 스크립트 태그를 닫지 못하게 < 를 이스케이프한다.

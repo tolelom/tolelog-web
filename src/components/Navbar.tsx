@@ -1,7 +1,7 @@
 import { useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { resolveAssetUrl } from '../utils/assetUrl';
+import { resolveAssetUrl } from '../lib/assetUrl';
 import ThemeToggle from './ThemeToggle';
 import './Navbar.css';
 

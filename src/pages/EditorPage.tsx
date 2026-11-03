@@ -1,9 +1,10 @@
 import { useState, useContext, useEffect, useRef, ChangeEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { POST_API, SERIES_API } from '../utils/api';
-import { STORAGE_KEYS } from '../utils/constants';
-import { invalidateCache } from '../utils/apiCache';
+import { POST_API, SERIES_API } from '../lib/api';
+import { STORAGE_KEYS } from '../lib/constants';
+import { invalidateCache } from '../lib/api/cache';
+import { postLimitError } from '../features/posts/validation';
 import { useAutoSave, type SaveStatus } from '../hooks/useAutoSave';
 import { useToast } from '../hooks/useToast';
 import { useReturnFocus } from '../hooks/useReturnFocus';
@@ -11,14 +12,14 @@ import { useKatexReady } from '../hooks/useKatexReady';
 import { useLatestRef } from '../hooks/useLatestRef';
 import { useServerDraft } from '../hooks/useServerDraft';
 import PageMeta from '../components/PageMeta';
-import { postPath } from '../utils/slug';
+import { postPath } from '../features/posts/slug';
 import BlockEditor, { type BlockEditorHandle, type InsertImage } from '../components/BlockEditor';
 import TagAutocompleteInput from '../components/TagAutocompleteInput';
 import EditorToolbar from '../components/EditorToolbar';
 import PreviewModal from '../components/PreviewModal';
 import DraftRestorePrompt from '../components/DraftRestorePrompt';
 import { FORMAT_MARKS, type FormatType } from '../components/editorFormats';
-import type { ApiError } from '../utils/api/client';
+import type { ApiError } from '../lib/api/client';
 import { PostFormData, DraftData, Series } from '../types';
 import 'highlight.js/styles/atom-one-dark.css';
 import './EditorPage.css';
@@ -210,6 +211,11 @@ function PostEditor({ postId }: { postId: string | undefined }) {
             setError('내용을 입력해주세요');
             return;
         }
+        const limitError = postLimitError(formData);
+        if (limitError) {
+            setError(limitError);
+            return;
+        }
         if (!token) {
             setError('로그인이 필요합니다');
             navigate('/login');
@@ -277,6 +283,11 @@ function PostEditor({ postId }: { postId: string | undefined }) {
         if (!postId) return;
         if (!formData.content.trim()) {
             setError('내용을 입력해주세요');
+            return;
+        }
+        const limitError = postLimitError(formData);
+        if (limitError) {
+            setError(limitError);
             return;
         }
         if (!token) {

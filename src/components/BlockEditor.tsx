@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
-import { parseBlocks, renderBlock } from '../utils/markdownParser';
-import { validateImageFile, compressImage, uploadImageToServer } from '../utils/imageUpload';
+import { parseBlocks, renderBlock } from '../features/markdown';
+import { validateImageFile, compressImage, uploadImageToServer } from '../features/images/imageUpload';
 import { useCopyCodeBlock } from '../hooks/useCopyCodeBlock';
 import DOMPurify from 'dompurify';
 import { FORMAT_MARKS, SHORTCUT_FORMATS } from './editorFormats';

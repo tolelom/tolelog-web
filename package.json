@@ -10,6 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
+    "contract:sync": "node scripts/sync-contract.mjs",
+    "contract:types": "node scripts/contract-types.mjs",
+    "contract:check": "node scripts/contract-types.mjs --check",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -42,6 +45,8 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
     "jsdom": "^29.0.0",
+    "openapi-typescript": "^7.13.0",
+    "swagger2openapi": "^7.0.8",
     "typescript": "^5.8.0",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.1.2",

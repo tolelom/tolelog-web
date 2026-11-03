@@ -2,9 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import ImageUploadButton from '../ImageUploadButton';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
-import * as imageUpload from '../../utils/imageUpload';
+import * as imageUpload from '../../features/images/imageUpload';
 
-vi.mock('../../utils/imageUpload', () => ({
+vi.mock('../../features/images/imageUpload', () => ({
     validateImageFile: vi.fn(() => ({ valid: true })),
     compressImage: vi.fn(async (f: File) => f),
     uploadImageToServer: vi.fn(),

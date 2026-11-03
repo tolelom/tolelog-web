@@ -1,126 +1,37 @@
-// 백엔드 API 응답의 모양이다. 필드 이름은 서버 JSON 그대로(snake_case) 둔다.
+import type { components } from './api.gen';
 
-export interface User {
-    id: number;
-    username: string;
-    avatar_url: string;
-    created_at: string;
-    last_login: string;
-}
+// 백엔드 API 의 요청·응답 모양은 api.gen.ts(tolelog-api Swagger 에서 생성)를 따른다.
+type Schemas = components['schemas'];
 
-export interface Post {
-    id: number;
-    title: string;
-    content: string;
-    user_id: number;
-    author: string;
-    is_public: boolean;
-    tags: string;
-    status?: string;
-    series?: SeriesInfo;
-    view_count: number;
-    like_count: number;
-    created_at: string;
-    updated_at: string;
-}
+export type SuccessResponse<T> = Omit<Schemas['dto.SuccessResponse'], 'data'> & { data: T };
+export type ErrorResponse = Schemas['dto.ErrorResponse'];
 
-export interface PostListItem {
-    id: number;
-    title: string;
-    user_id: number;
-    author: string;
-    is_public: boolean;
-    tags: string;
-    series?: SeriesInfo;
-    view_count: number;
-    like_count: number;
-    created_at: string;
-    updated_at: string;
-    excerpt?: string;
-}
+export type AuthData = Schemas['dto.AuthDataResponse'];
+export type User = Schemas['dto.UserResponse'];
+export type AvatarUpload = Schemas['dto.AvatarResponse'];
+export type ImageUpload = Schemas['dto.ImageUploadResponse'];
+export type MessageData = Schemas['dto.MessageResponse'];
 
-export interface Pagination {
-    page: number;
-    page_size: number;
-    total: number;
-    total_pages: number;
-}
+export type Post = Schemas['dto.PostResponse'];
+export type PostListItem = Schemas['dto.PostListResponse'];
+export type Pagination = Schemas['dto.Pagination'];
+export type PostListWithPagination = Schemas['dto.PostListWithPagination'];
+export type LikeToggle = Schemas['dto.LikeToggleResponse'];
+export type LikeStatus = Schemas['dto.LikeStatusResponse'];
 
-export interface AuthData {
-    access_token: string;
-    refresh_token: string;
-    username: string;
-    user_id: number;
-    avatar_url: string;
-}
+export type Comment = Schemas['dto.CommentResponse'];
+export type CommentListResponse = Schemas['dto.CommentListResponse'];
 
-export interface SuccessResponse<T> {
-    status: string;
-    data: T;
-}
+export type Series = Schemas['dto.SeriesResponse'];
+export type SeriesPostItem = Schemas['dto.SeriesPostItem'];
+export type SeriesDetail = Schemas['dto.SeriesDetailResponse'];
+export type SeriesNav = Schemas['dto.SeriesNavResponse'];
+export type SeriesInfo = Schemas['dto.SeriesInfo'];
 
-export interface ErrorResponse {
-    status: string;
-    error: string;
-    message: string;
-}
+export type TagList = Schemas['dto.TagListResponse'];
 
-export interface PostListWithPagination {
-    posts: PostListItem[];
-    pagination: Pagination;
-}
-
-export interface Comment {
-    id: number;
-    post_id: number;
-    user_id: number;
-    author: string;
-    avatar_url: string;
-    content: string;
-    created_at: string;
-}
-
-export interface CommentListResponse {
-    comments: Comment[];
-    total: number;
-}
-
-export interface Series {
-    id: number;
-    title: string;
-    description: string;
-    user_id: number;
-    author: string;
-    post_count: number;
-    created_at: string;
-    updated_at: string;
-}
-
-export interface SeriesPostItem {
-    id: number;
-    title: string;
-    order: number;
-    created_at: string;
-}
-
-export interface SeriesDetail extends Omit<Series, 'post_count'> {
-    posts: SeriesPostItem[];
-}
-
-export interface SeriesNav {
-    series_id: number;
-    series_title: string;
-    current_order: number;
-    total_posts: number;
-    prev_post: { id: number; title: string } | null;
-    next_post: { id: number; title: string } | null;
-}
-
-export interface SeriesInfo {
-    series_id: number;
-    series_title: string;
-    series_order: number;
-}
+export type CreatePostRequest = Schemas['dto.CreatePostRequest'];
+export type UpdatePostRequest = Schemas['dto.UpdatePostRequest'];
 
 export interface TagInfo {
     name: string;

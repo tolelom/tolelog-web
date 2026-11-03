@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { slugifyHeading } from '../utils/markdownParser';
+import { slugifyHeading } from '../features/markdown';
 
 export interface TocItem {
     level: number;
