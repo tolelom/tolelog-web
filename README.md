@@ -54,8 +54,10 @@ flowchart LR
 | `src/components` | 에디터, 댓글, 내비게이션, 메타 태그 등 공용 컴포넌트 |
 | `src/context` | 인증, 테마, 토스트 상태 |
 | `src/hooks` | 자동 저장, 목차, 좋아요, 시리즈 내비게이션 등 |
-| `src/utils/api` | 영역별 API 클라이언트(auth, posts, comments, series) |
-| `src/utils/markdown` | 마크다운 파서와 렌더러 |
+| `src/lib` | 도메인과 무관한 기반 코드: `api/`(API 클라이언트·캐시·서버 입력 한도), 설정 상수, 토스트 알림, 오류 보고, 날짜 형식, 주소 헬퍼 |
+| `src/features` | 컴포넌트·훅이 아닌 기능별 로직: `markdown/`(파서·렌더러), `posts/`(목록·메타·요약·슬러그·태그·입력 검사), `images/`(압축·업로드), `auth/`(입력 검사) |
+| `src/types` | API 타입(`api.gen.ts` 생성 파일의 별칭)과 마크다운 블록·에디터 타입 |
+| `api-contract/swagger.json` | tolelog-api Swagger 사본(API 계약) |
 | `vite.config.ts` | SSG 대상 경로 결정(sitemap 조회, 인증 라우트 제외) |
 | `scripts/decode-ssg-filenames.mjs` | 미리 렌더링한 파일 이름의 퍼센트 인코딩을 풀어 한글 경로를 nginx가 찾게 함 |
 | `nginx.conf`, `nginx/` | 정적 파일 서빙, gzip, 캐시, 보안 헤더 |
@@ -94,4 +96,4 @@ API 요청·응답 타입의 원본은 tolelog-api 가 주석에서 생성하는
 
 - 백엔드 응답이 바뀌면 `npm run contract:sync` 를 실행한다. 형제 디렉터리 `../tolelog-api` 가 있으면 그 파일을, 없거나 `-- --remote` 를 주면 GitHub main 의 파일을 받는다. 바뀐 사본과 생성 파일을 함께 커밋한다.
 - 테스트(`scripts/__tests__/contract-types.test.ts`)가 생성 파일이 사본과 어긋나면 실패한다. 네트워크는 쓰지 않는다.
-- 폼이 검사하는 입력 한도(`src/utils/limits.ts` — 비밀번호 72바이트, 태그 50자, 검색어 2~100자 등)는 스펙의 값과 같아야 하고, 테스트가 이를 확인한다.
+- 폼이 검사하는 입력 한도(`src/lib/api/limits.ts` — 비밀번호 72바이트, 태그 50자, 검색어 2~100자 등)는 스펙의 값과 같아야 하고, 테스트가 이를 확인한다.
