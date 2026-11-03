@@ -2,21 +2,16 @@ import { describe, it, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import ProfilePostList from '../ProfilePostList';
 import { renderWithProviders } from '../../../test-utils/renderWithProviders';
-import type { PostListItem } from '../../../types';
+import { makePostListItem } from '../../../test-utils/fixtures';
 
-const post: PostListItem = {
+const post = makePostListItem({
     id: 27,
     title: 'Mark and Sweep GC',
-    user_id: 1,
-    author: 'tolelom',
-    is_public: true,
-    tags: '',
     view_count: 3,
-    like_count: 0,
     created_at: '2026-04-20T00:00:00Z',
     updated_at: '2026-04-20T00:00:00Z',
     excerpt: '도달 가능한 객체만 유지하고, 나머지는 삭제하는 알고리즘',
-};
+});
 
 describe('ProfilePostList', () => {
     it('shows the excerpt the list API returns under each post', () => {

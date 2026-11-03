@@ -1,5 +1,5 @@
 import { request } from './client';
-import type { SuccessResponse, Post, PostListWithPagination } from '../../types';
+import type { SuccessResponse, CreatePostRequest, Post, PostListItem, PostListWithPagination, UpdatePostRequest } from '../../types';
 
 function pageParams(page: number, pageSize: number, tag?: string): URLSearchParams {
     const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
@@ -44,14 +44,14 @@ export const POST_API = {
         return request(`/api/v1/posts/search?${params}`, { signal, errorMessage: '검색에 실패했습니다' });
     },
 
-    createPost: async (title: string, content: string, isPublic: boolean = true, token: string, tags: string = ''): Promise<SuccessResponse<{ id: number }>> => {
-        return request('/api/v1/posts', { method: 'POST', auth: 'required', token, json: { title, content, is_public: isPublic, tags } });
+    createPost: async (title: string, content: string, isPublic: boolean = true, token: string, tags: string = ''): Promise<SuccessResponse<Post>> => {
+        return request('/api/v1/posts', { method: 'POST', auth: 'required', token, json: { title, content, is_public: isPublic, tags } satisfies CreatePostRequest });
     },
 
     // 발행과 발행된 글의 수정 저장은 published 를 보낸다. 초안을 draft 로 남기려면 saveDraft 를 쓴다.
-    updatePost: async (postId: number | string, title: string, content: string, isPublic: boolean = true, token: string, tags: string = ''): Promise<SuccessResponse<{ id: number }>> => {
+    updatePost: async (postId: number | string, title: string, content: string, isPublic: boolean = true, token: string, tags: string = ''): Promise<SuccessResponse<Post>> => {
         return request(`/api/v1/posts/${postId}`, {
-            method: 'PUT', auth: 'required', token, json: { title, content, is_public: isPublic, tags, status: 'published' },
+            method: 'PUT', auth: 'required', token, json: { title, content, is_public: isPublic, tags, status: 'published' } satisfies UpdatePostRequest,
         });
     },
 
@@ -59,19 +59,19 @@ export const POST_API = {
         return request(`/api/v1/posts/${postId}`, { method: 'DELETE', auth: 'required', token });
     },
 
-    getDrafts: async (token: string): Promise<SuccessResponse<Post[]>> => {
+    getDrafts: async (token: string): Promise<SuccessResponse<PostListItem[]>> => {
         return request('/api/v1/drafts', { auth: 'required', token });
     },
 
-    createDraft: async (title: string, content: string, tags: string, token: string): Promise<SuccessResponse<{ id: number }>> => {
+    createDraft: async (title: string, content: string, tags: string, token: string): Promise<SuccessResponse<Post>> => {
         return request('/api/v1/posts', {
-            method: 'POST', auth: 'required', token, json: { title, content, is_public: false, tags, status: 'draft' },
+            method: 'POST', auth: 'required', token, json: { title, content, is_public: false, tags, status: 'draft' } satisfies CreatePostRequest,
         });
     },
 
     // isPublic 을 빼면 백엔드는 저장된 공개 설정을 그대로 둔다(PUT 은 보낸 필드만 바꾼다).
-    saveDraft: async (postId: number | string, title: string, content: string, tags: string, token: string, isPublic?: boolean): Promise<SuccessResponse<{ id: number }>> => {
-        const json = isPublic === undefined
+    saveDraft: async (postId: number | string, title: string, content: string, tags: string, token: string, isPublic?: boolean): Promise<SuccessResponse<Post>> => {
+        const json: UpdatePostRequest = isPublic === undefined
             ? { title, content, tags, status: 'draft' }
             : { title, content, tags, is_public: isPublic, status: 'draft' };
         return request(`/api/v1/posts/${postId}`, { method: 'PUT', auth: 'required', token, json });

@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { POST_API } from '../utils/api';
-import type { Post } from '../types';
+import type { PostListItem } from '../types';
 import { formatDate } from '../utils/format';
 import { useToast } from '../hooks/useToast';
 import PageMeta from '../components/PageMeta';
@@ -11,7 +11,7 @@ import './DraftsPage.css';
 export default function DraftsPage() {
     const { token } = useContext(AuthContext);
     const { toast } = useToast();
-    const [drafts, setDrafts] = useState<Post[]>([]);
+    const [drafts, setDrafts] = useState<PostListItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [fetchKey, setFetchKey] = useState(0);
