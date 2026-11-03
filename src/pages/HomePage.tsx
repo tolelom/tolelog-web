@@ -1,18 +1,15 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useState, useEffect, useRef, MouseEvent } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
 import { POST_API, SERIES_API, TAG_API, USER_API } from '../utils/api';
-import { formatDate } from '../utils/format';
 import { BLOG_OWNER_ID } from '../utils/constants';
 import { resolveAssetUrl } from '../utils/assetUrl';
 import { cachedFetch } from '../utils/apiCache';
 import { PostListItem, Series, User, TagInfo } from '../types';
 import PageMeta from '../components/PageMeta';
 import Pager from '../components/Pager';
-import TagChip from '../components/TagChip';
-import { splitTags } from '../utils/tags';
-import { parsePageParam, parsePostListPage } from '../utils/postList';
+import HomePostCard from '../components/home/HomePostCard';
+import { listSearchParams, parsePageParam, parsePostListPage } from '../utils/postList';
 import { BlogJsonLd } from '../components/StructuredData';
-import { postPath } from '../utils/slug';
 import './HomePage.css';
 
 const PAGE_SIZE = 10;
@@ -20,7 +17,6 @@ const PAGE_SIZE = 10;
 const MIN_SEARCH_LENGTH = 2;
 
 export default function HomePage() {
-    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const page = parsePageParam(searchParams.get('page'));
     const tag: string = searchParams.get('tag') || '';
@@ -117,16 +113,25 @@ export default function HomePage() {
         setSearchInput(urlQuery);
     }, [urlQuery]);
 
+    const clearSearch = () => {
+        setSearchInput('');
+        setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.delete('q');
+            next.delete('page');
+            return next;
+        });
+    };
+
     useEffect(() => {
         const controller = new AbortController();
         setLoading(true);
         setError(null);
 
-        const q = searchParams.get('q') || '';
-        const cacheKey = q ? `search:${q}:${page}` : `posts:${page}:${tag}`;
+        const cacheKey = searchQuery ? `search:${searchQuery}:${page}` : `posts:${page}:${tag}`;
         const fetchPromise = cachedFetch(cacheKey, () =>
-            q
-                ? POST_API.searchPosts(q, page, PAGE_SIZE, { signal: controller.signal })
+            searchQuery
+                ? POST_API.searchPosts(searchQuery, page, PAGE_SIZE, { signal: controller.signal })
                 : POST_API.getPublicPosts(page, PAGE_SIZE, { signal: controller.signal, tag })
         );
 
@@ -218,7 +223,7 @@ export default function HomePage() {
                     <p className="home-search-hint">두 글자 이상 입력해 주세요.</p>
                 )}
                 {searchInput && (
-                    <button className="home-search-clear" onClick={() => { setSearchInput(''); setSearchParams(prev => { const next = new URLSearchParams(prev); next.delete('q'); next.delete('page'); return next; }); }} aria-label="검색어 지우기">×</button>
+                    <button className="home-search-clear" onClick={clearSearch} aria-label="검색어 지우기">×</button>
                 )}
             </div>
 
@@ -272,7 +277,7 @@ export default function HomePage() {
                 {searchQuery && (
                     <div className="home-tag-filter">
                         <span>검색: <strong>{searchQuery}</strong></span>
-                        <button className="home-tag-clear" onClick={() => { setSearchInput(''); setSearchParams(prev => { const next = new URLSearchParams(prev); next.delete('q'); next.delete('page'); return next; }); }}>×</button>
+                        <button className="home-tag-clear" onClick={clearSearch}>×</button>
                     </div>
                 )}
 
@@ -283,53 +288,13 @@ export default function HomePage() {
                     </div>
                 )}
 
-                {!loading && !error && posts.map((post: PostListItem) => (
-                    <Link
+                {!loading && !error && posts.map(post => (
+                    <HomePostCard
                         key={post.id}
-                        to={postPath(post)}
-                        className="home-post-card"
-                    >
-                        <h2 className="home-post-title">{post.title}</h2>
-                        <div className="home-post-meta">
-                            <span
-                                className="home-post-author"
-                                role="link"
-                                tabIndex={0}
-                                onClick={(e: MouseEvent<HTMLSpanElement>) => { e.preventDefault(); e.stopPropagation(); navigate(`/user/${post.user_id}`); }}
-                                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); navigate(`/user/${post.user_id}`); } }}
-                            >
-                                {post.author}
-                            </span>
-                            <span className="home-post-sep">&middot;</span>
-                            <span className="home-post-date">{formatDate(post.created_at)}</span>
-                            {post.view_count > 0 && (
-                                <>
-                                    <span className="home-post-sep">&middot;</span>
-                                    <span className="home-post-views">조회 {post.view_count}</span>
-                                </>
-                            )}
-                        </div>
-                        {post.series && (
-                            <div className="home-post-series-badge">
-                                {post.series.series_title}
-                            </div>
-                        )}
-                        {post.tags && (
-                            <div className="home-post-tags">
-                                {splitTags(post.tags).map((t: string) => (
-                                    <TagChip
-                                        key={t}
-                                        tag={t}
-                                        active={tag === t}
-                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSearchParams(tag === t ? {} : { tag: t }); }}
-                                    />
-                                ))}
-                            </div>
-                        )}
-                        {post.excerpt && (
-                            <p className="home-post-preview">{post.excerpt}</p>
-                        )}
-                    </Link>
+                        post={post}
+                        activeTag={tag}
+                        onTagClick={(t) => setSearchParams(tag === t ? {} : { tag: t })}
+                    />
                 ))}
 
                 {!loading && !error && (posts.length > 0 || page > 1) && (
@@ -338,19 +303,8 @@ export default function HomePage() {
                         page={page}
                         totalPages={totalPages}
                         hasMore={hasMore}
-                        onPrev={() => {
-                            const params: Record<string, string> = {};
-                            if (tag) params.tag = tag;
-                            if (searchQuery) params.q = searchQuery;
-                            if (page - 1 > 1) params.page = String(page - 1);
-                            setSearchParams(params);
-                        }}
-                        onNext={() => {
-                            const params: Record<string, string> = { page: String(page + 1) };
-                            if (tag) params.tag = tag;
-                            if (searchQuery) params.q = searchQuery;
-                            setSearchParams(params);
-                        }}
+                        onPrev={() => setSearchParams(listSearchParams(page - 1, { tag, q: searchQuery }))}
+                        onNext={() => setSearchParams(listSearchParams(page + 1, { tag, q: searchQuery }))}
                     />
                 )}
             </div>
