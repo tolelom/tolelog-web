@@ -3,7 +3,7 @@ import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import UserProfilePage from '../UserProfilePage';
 import { renderWithProviders } from '../../test-utils/renderWithProviders';
 import { USER_API, POST_API, SERIES_API } from '../../lib/api';
-import { compressImage, validateImageFile } from '../../utils/imageUpload';
+import { compressImage, validateImageFile } from '../../features/images/imageUpload';
 import type { PostListItem, Series } from '../../types';
 import { makePostListItem } from '../../test-utils/fixtures';
 
@@ -13,7 +13,7 @@ vi.mock('../../lib/api', () => ({
     SERIES_API: { getUserSeries: vi.fn(), deleteSeries: vi.fn() },
 }));
 
-vi.mock('../../utils/imageUpload', () => ({
+vi.mock('../../features/images/imageUpload', () => ({
     validateImageFile: vi.fn(),
     compressImage: vi.fn(),
 }));

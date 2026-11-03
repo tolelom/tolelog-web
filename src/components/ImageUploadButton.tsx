@@ -1,6 +1,6 @@
 import React, { useRef, useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { validateImageFile, compressImage, uploadImageToServer } from '../utils/imageUpload';
+import { validateImageFile, compressImage, uploadImageToServer } from '../features/images/imageUpload';
 import { captureException } from '../lib/errorReporting';
 import './ImageUploadButton.css';
 

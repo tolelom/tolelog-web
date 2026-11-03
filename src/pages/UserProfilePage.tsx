@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useMemo, useRef, useCallback, ChangeEv
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { USER_API, POST_API, SERIES_API } from '../lib/api';
-import { validateImageFile, compressImage } from '../utils/imageUpload';
+import { validateImageFile, compressImage } from '../features/images/imageUpload';
 import { resolveAssetUrl } from '../lib/assetUrl';
 import PageMeta from '../components/PageMeta';
 import { notify as toast } from '../lib/notify';

@@ -1,14 +1,14 @@
-import { API_BASE_URL } from '../../lib/constants';
+import { API_BASE_URL } from '../../../lib/constants';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('../../lib/api', () => ({
+vi.mock('../../../lib/api', () => ({
     IMAGE_API: {
         upload: vi.fn(),
     },
 }));
 
 import { validateImageFile, compressImage, uploadImageToServer } from '../imageUpload';
-import { IMAGE_API } from '../../lib/api';
+import { IMAGE_API } from '../../../lib/api';
 
 function makeFile(name: string, size: number, type: string): File {
     // jsdom 의 File 은 byteLength 만큼만 메모리를 잡으므로 0 으로 채워 큰 size 만 갖는 객체를 만들 수 없다.
