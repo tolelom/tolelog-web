@@ -30,4 +30,11 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
+  {
+    // 라우트 정의 모듈이다. 페이지 lazy 선언과 routes 를 함께 내보내며 Fast Refresh 경계가 아니다.
+    files: ['src/App.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])
