@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import '@testing-library/jest-dom/vitest';
 
 // Provide a working localStorage mock for jsdom environments where it may not be available
 const localStorageMock = (() => {

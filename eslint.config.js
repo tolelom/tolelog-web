@@ -12,7 +12,7 @@ export default defineConfig([
     extends: [
       js.configs.recommended,
       ...tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
+      reactHooks.configs.flat['recommended-latest'],
       reactRefresh.configs.vite,
     ],
     languageOptions: {
@@ -28,6 +28,9 @@ export default defineConfig([
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
       '@typescript-eslint/no-explicit-any': 'warn',
+      // react-hooks 7에서 새로 생긴 React Compiler 규칙. 기존 코드 15곳이 걸려 의존성 업그레이드와 분리해 고친다.
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/refs': 'warn',
     },
   },
   {
