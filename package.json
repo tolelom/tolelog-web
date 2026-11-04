@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@sentry/react": "^10.53.1",
-    "dompurify": "^3.3.1",
+    "dompurify": "^3.4.17",
     "highlight.js": "^11.9.0",
     "katex": "^0.16.28",
     "react": "^19.1.1",
