@@ -1,90 +1,21 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code in this repository. Folder map, prerendering and the rules every change must follow are in `ARCHITECTURE.md`. Commands, the API contract workflow and deploy are in `CONTRIBUTING.md`.
 
-## Project Overview
+## Verify
 
-Tolelog is a Korean-language markdown blog platform. This repository contains only the **React frontend**; the backend is a separate Go Fiber API server (in `../fiber_api_server/`).
+Before finishing, run `npm run lint`, `npm run type-check` and `npm run test`. If the change touches routes or prerendering, also run `npm run build`.
 
-## Development Commands
+## Code rules
 
-```bash
-npm run dev         # Start dev server (port 5173, proxies /api → localhost:3000, strips /api prefix)
-npm run build       # Type-check (tsc --noEmit) then Vite production build (outputs to ./dist)
-npm run lint        # ESLint flat config (no-unused-vars ignores ^[A-Z_] pattern)
-npm run type-check  # TypeScript type checking only (tsc --noEmit)
-npm run preview     # Preview production build locally
-npm run contract:sync   # Copy ../tolelog-api/docs/swagger.json (or GitHub main with -- --remote) and regenerate src/types/api.gen.ts
-npm run contract:check  # Fail if src/types/api.gen.ts is stale vs api-contract/swagger.json
-```
+- Public routes in `src/App.tsx` load with `route.lazy`. Passing a `React.lazy` component there breaks vite-react-ssg prerendering; only private pages (editor, settings, drafts) use `React.lazy`.
+- Read and write `localStorage` only through the keys in `STORAGE_KEYS` (`src/lib/constants.ts`).
+- Call the API through the objects re-exported from `src/lib/api/index.ts`. They go through `request()` in `src/lib/api/client.ts`, which refreshes the token on 401.
+- Import markdown functions from `src/features/markdown` (its `index.ts`), not from individual files.
+- For colors in new CSS, use the custom properties in `src/index.css` (`:root` for light, `[data-theme="dark"]` for dark) so both themes follow.
+- Tests sit in a `__tests__/` folder next to the code they cover.
+- Unused-variable lint ignores names matching `^[A-Z_]`; any other unused variable fails `npm run lint`.
 
-Environment: Node.js 20, npm. Copy `.env.example` to `.env` and set `VITE_API_URL` (defaults to `http://localhost:3000`).
+## Deploy
 
-## Architecture
-
-**Stack:** React 19 + Vite 7 + TypeScript + React Router 6. All source files are `.ts`/`.tsx`.
-
-**State management:** React Context API via `AuthContext`/`AuthProvider` and `ThemeContext`/`ThemeProvider`. Auth tokens, user info, and theme preference persisted in `localStorage` using keys from `src/lib/constants.ts`.
-
-**Source layout:** `src/lib/` holds cross-cutting infrastructure with no domain knowledge; `src/features/<feature>/` holds domain logic that isn't a component or hook (tests sit in each folder's `__tests__/`). `pages/`, `components/`, `hooks/`, `context/` keep their roles.
-- `src/lib/api/` — API client and endpoints, response cache (`cache.ts`), server input limits (`limits.ts`)
-- `src/lib/` — `constants.ts` (`API_BASE_URL`, `STORAGE_KEYS`, `AUTO_SAVE_DELAY_MS`, `IMAGE_CONSTRAINTS`), `notify.ts` (toast bridge), `errorReporting.ts` (lazy Sentry), `format.ts` (dates), `assetUrl.ts`, `siteUrl.ts`
-- `src/features/markdown/` — custom markdown parser/renderer; import from the folder (`index.ts`: `parseBlocks()`, `renderBlock()`, `renderMarkdown()`, `parseInline()`). Supports headings, lists, tables, code blocks (highlight.js), blockquotes, images, checklists, footnotes, and KaTeX math (`$inline$`, `$$block$$`).
-- `src/features/posts/` — list paging (`list.ts`), prerender meta (`meta.ts`), description/og:image (`summary.ts`), editor limit checks (`validation.ts`), slug/post path (`slug.ts`, must match the API's `internal/permalink`), tags
-- `src/features/images/` — image validation, canvas-based compression, server upload wrapper
-- `src/features/auth/` — login/register field validation (password limit is UTF-8 bytes, like bcrypt on the API)
-
-**Type definitions:** `src/types/index.ts` — API types are aliases of `src/types/api.gen.ts`, which is generated from the vendored API contract `api-contract/swagger.json` (tolelog-api `docs/swagger.json`). Never edit `api.gen.ts`; run `npm run contract:sync` when the API changes (or `contract:types` after editing the vendored spec). A test fails if the generated file is stale, and `src/lib/api/__tests__/limits.test.ts` fails if `limits.ts` drifts from the spec. Non-API types (markdown blocks, editor form/draft) are hand-written there too.
-
-**API layer:** `src/lib/api/index.ts` re-exports namespaced API objects implemented in `src/lib/api/`. They call `request()` in `src/lib/api/client.ts`, which refreshes the token on 401.
-- `POST_API` — post CRUD, search, pagination, tag filtering
-- `AUTH_API` — `login()`, `register()`, `refresh()`
-- `IMAGE_API` — FormData upload with Bearer token
-- `USER_API` — `getProfile()`, `uploadAvatar()`
-- `COMMENT_API` — `getComments()`, `createComment()`, `deleteComment()`
-
-**Key components:**
-- `BlockEditor` — Typora/Notion-style block-based inline markdown editor with `forwardRef`. Exposes `wrapSelection()` via `useImperativeHandle`. Supports Ctrl+B/I/K/\` shortcuts. Images uploaded to server (Base64 as fallback).
-- `AuthForm` — generic field-driven form for login/register. Used by `LoginBox` and `RegisterBox`.
-- `CommentSection` — comment list display and creation for posts.
-- `ErrorBoundary` — React error boundary with fallback UI.
-- `PrivateRoute` — redirects to `/login` if no auth token.
-- `ThemeToggle` — dark/light mode toggle button.
-- `ImageUploadButton` — image upload with compression via `IMAGE_API`.
-
-**Routing:** `App.tsx` exports vite-react-ssg routes. Public pages load with `route.lazy`; private pages (editor, settings, drafts) use `React.lazy`.
-
-**Key routes:**
-| Path | Component | Auth |
-|------|-----------|------|
-| `/` | HomePage | No |
-| `/post/:postId` | PostDetailPage | No |
-| `/user/:userId` | UserProfilePage | No |
-| `/login`, `/register` | LoginPage, RegisterPage | No |
-| `/editor` | EditorPage (new post) | Yes |
-| `/editor/:postId` | EditorPage (edit) | Yes |
-| `/editor_private` | EditorPage (private post) | Yes |
-
-**Editor:** Block-based inline markdown editor via `BlockEditor`. Toolbar with format buttons and keyboard shortcuts (Ctrl+B/I/K/\`). Drafts auto-saved to `localStorage` via `useAutoSave` hook (1s debounce). Separate storage keys for new posts vs. editing existing posts.
-
-**Theming:** CSS custom properties defined in `src/index.css` (`:root` for light, `[data-theme="dark"]` for dark). All CSS files use variables like `--bg-primary`, `--text-primary`, `--accent-color`.
-
-## Backend API (for reference)
-
-The Go Fiber backend exposes (all prefixed with `/api/v1`):
-- `POST /auth/login`, `POST /auth/register`, `POST /auth/refresh` — auth endpoints
-- `GET /posts`, `GET /posts/:id`, `GET /users/:userId/posts` — public reads (paginated, tag-filterable)
-- `GET /posts/search?q=` — search posts
-- `GET /users/:userId` — public user profile
-- `POST /posts`, `PUT /posts/:id`, `DELETE /posts/:id` — protected CRUD (Bearer token)
-- `POST /upload` — image upload (Bearer token, multipart/form-data)
-- `PUT /users/avatar` — avatar upload (Bearer token)
-- `GET /posts/:id/comments`, `POST /posts/:id/comments`, `DELETE /posts/:id/comments/:commentId` — comments
-
-Response format: `{ status, data, error }`
-
-## CI/CD
-
-GitHub Actions (`.github/workflows/deploy-frontend.yml`): on push to `main`, runs lint → test → build → Docker image (linux/arm64) → push to GHCR as `:latest`, `:main`, `:<sha>`. Also runs hourly on a schedule so SSG prerender picks up newly published posts.
-
-**The workflow ends at the GHCR push — it does not deploy.** Deployment is GitOps: Renovate watches the `:main` tag and auto-pins the new digest into the `server-config` repo's compose file, and `git-sync-deploy` applies it on the server. SSH 22 is not exposed externally per security policy, so do not add an SSH deploy step back (see `751ca51`).
+The workflow ends at the GHCR push. Do not add an SSH deploy step back: port 22 is closed to the outside and deploy is GitOps (see `751ca51`).
