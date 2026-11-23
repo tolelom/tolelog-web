@@ -27,7 +27,7 @@ npm run contract:check    # 생성된 타입이 사본과 같은지 확인
 
 ## 배포
 
-`main`에 push하면 GitHub Actions(`.github/workflows/deploy-frontend.yml`)가 lint, 타입 검사, 계약 검사, 테스트를 거쳐 SSG 빌드를 하고, nginx 이미지 `ghcr.io/tolelom/tolelog`를 linux/arm64로 `latest`, `main`, 커밋 SHA 태그로 올립니다. workflow는 이미지 push에서 끝나고, Renovate가 `server-config` 저장소의 이미지 digest를 올리면 git-sync가 서버에 반영합니다.
+`main`에 push하면 GitHub Actions(`.github/workflows/ci.yml`)가 lint, 타입 검사, 계약 검사, 테스트를 거쳐 SSG 빌드를 하고, nginx 이미지 `ghcr.io/tolelom/tolelog`를 linux/arm64로 `latest`, `main`, 커밋 SHA 태그로 올립니다. workflow는 이미지 push에서 끝나고, Renovate가 `server-config` 저장소의 이미지 digest를 올리면 git-sync가 서버에 반영합니다.
 
 - 새 글이 미리 렌더링 결과에 들어가도록 매일 02:30 KST에 다시 빌드합니다. 즉시 다시 빌드하려면 workflow를 수동 실행하거나 `rebuild` 타입의 `repository_dispatch`를 보냅니다.
 - CI 빌드는 secret `VITE_API_URL`을 씁니다.
