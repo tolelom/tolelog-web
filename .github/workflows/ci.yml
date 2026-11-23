@@ -17,6 +17,10 @@ on:
   repository_dispatch:
     types: [rebuild]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   lint-test:
     runs-on: ubuntu-latest
